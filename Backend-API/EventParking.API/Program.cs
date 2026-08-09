@@ -26,6 +26,10 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CustomerService>();
 
+builder.Services.AddScoped<
+    INotificationRepository,
+    NotificationRepository>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -34,11 +38,13 @@ builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IEventCategoryRepository, EventCategoryRepository>();
 builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 builder.Services.AddScoped<VenueService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<EventCategoryService>();
 builder.Services.AddScoped<ParkingService>();
+builder.Services.AddScoped<NotificationService>();
 
 var app = builder.Build();
 

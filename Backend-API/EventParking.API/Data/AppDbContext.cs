@@ -20,6 +20,8 @@ namespace EventParking.API.Data
         public DbSet<ParkingSlot> ParkingSlots { get; set; }
         public DbSet<ParkingReservation> ParkingReservations { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -57,6 +59,15 @@ namespace EventParking.API.Data
             modelBuilder.Entity<ParkingSlot>()
                 .HasIndex(x => new { x.VenueId, x.SlotNumber })
                 .IsUnique();
+
+            modelBuilder.Entity<Notification>()
+                .HasOne(x => x.Customer)
+                .WithMany()
+                .HasForeignKey(x => x.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Notification>()
+                .HasIndex(x => new { x.CustomerId, x.IsRead });
         }
     }
 

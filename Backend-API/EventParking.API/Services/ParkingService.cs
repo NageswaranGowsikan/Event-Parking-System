@@ -10,13 +10,16 @@ namespace EventParking.API.Services
     {
         private readonly IParkingRepository _parkingRepository;
         private readonly AppDbContext _context;
+        private readonly NotificationService _notificationService;
 
         public ParkingService(
             IParkingRepository parkingRepository,
-            AppDbContext context)
+            AppDbContext context,
+            NotificationService notificationService)
         {
             _parkingRepository = parkingRepository;
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<ParkingSlotResponseDto> CreateSlotAsync(
@@ -155,6 +158,14 @@ namespace EventParking.API.Services
 
             await _parkingRepository.AddReservationAsync(reservation);
 
+            await _notificationService.CreateSystemNotificationAsync(
+                reservation.CustomerId,
+                "Parking",
+                "Parking Reservation Confirmed",
+                $"Parking slot {slot.SlotNumber} has been reserved successfully.",
+                "ParkingReservation",
+            reservation.Id);
+
             reservation.ParkingSlot = slot;
             reservation.Event = eventItem;
 
@@ -214,6 +225,16 @@ namespace EventParking.API.Services
             await _parkingRepository
                 .UpdateReservationAsync(reservation);
 
+            // Ingana add pannanum
+
+            await _notificationService.CreateSystemNotificationAsync(
+                reservation.CustomerId,
+                "Parking",
+                "Parking Reservation Updated",
+                $"Your parking reservation status is now {reservation.Status}.",
+                "ParkingReservation",
+                reservation.Id);
+
             return MapReservation(reservation);
         }
 
@@ -256,6 +277,8 @@ namespace EventParking.API.Services
                 Status = reservation.Status,
                 CreatedAt = reservation.CreatedAt
             };
+
+
         }
     }
 }
