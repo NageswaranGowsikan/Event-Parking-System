@@ -19,6 +19,7 @@ namespace EventParking.API.Data
         public DbSet<BookingSeat> BookingSeats { get; set; }
         public DbSet<ParkingSlot> ParkingSlots { get; set; }
         public DbSet<ParkingReservation> ParkingReservations { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -82,6 +83,15 @@ namespace EventParking.API.Data
             // BRD Rule: One parking slot can only be reserved by one customer (One-to-One enforcement)
             modelBuilder.Entity<ParkingReservation>()
                 .HasIndex(pr => pr.BookingId)
+                .IsUnique();
+            // Inside OnModelCreating, add this configuration block:
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasPrecision(18, 2);
+
+            // BRD Rule: A payment cannot be recorded twice for the same booking (One-to-One rule)
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.BookingId)
                 .IsUnique();
         }
     }

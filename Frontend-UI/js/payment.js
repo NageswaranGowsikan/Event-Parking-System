@@ -56,13 +56,18 @@ function handleExpired() {
 
 async function submitPayment() {
     try {
-        const response = await apiFetch(`/bookings/${currentBookingId}/pay`, {
+        // Hit the NEW Module 7 Payment Endpoint
+        const response = await apiFetch(`/bookings/${currentBookingId}/payment`, {
             method: 'POST'
         });
         
-        clearInterval(timerInterval); // Stop the timer
-        alert(response.message);
-        window.location.href = "events.html"; // Route them back to the catalog or a success page
+        clearInterval(timerInterval); // Stop the expiration timer
+        
+        // Show the success message and receipt number
+        alert(`${response.message}\nReceipt Number: ${response.receiptNumber}`);
+        
+        // Optionally, you can redirect them to a receipt page or their dashboard
+        window.location.href = "events.html"; 
     } catch (error) {
         alert("Payment failed: " + error.message);
     }

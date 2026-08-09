@@ -64,16 +64,6 @@ namespace EventParking.API.Controllers
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        [Authorize]
-        [HttpPost("{id}/pay")]
-        public async Task<IActionResult> SimulatePayment(int id)
-        {
-            try
-            {
-                await _bookingService.ConfirmPaymentAsync(id);
-                return Ok(new { Message = "Payment successful. Booking Confirmed!" });
-            }
-            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
-        }
+        
     }
 }
