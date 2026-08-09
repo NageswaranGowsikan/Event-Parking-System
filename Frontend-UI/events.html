@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Events</title>
+    <link rel="stylesheet" href="css/admin.css"> <!-- Reusing your navbar styles -->
+    <link rel="stylesheet" href="css/events.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h2>Event & Parking Reservations</h2>
+        <div>
+            <a href="profile.html">My Profile</a>
+            <a href="login.html">Login</a>
+        </div>
+    </nav>
+    
+    <div class="events-header">
+        <h1>Upcoming Events</h1>
+        <p>Discover and book seats for your favorite events.</p>
+    </div>
+
+    <!-- The JavaScript will inject the event cards inside this div -->
+    <div id="eventsContainer" class="events-grid">
+        <h3 style="text-align: center; grid-column: 1 / -1;">Loading events...</h3>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/events.js"></script>
+</body>
+</html>
