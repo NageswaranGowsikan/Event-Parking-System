@@ -23,6 +23,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // 3. Register Repositories and Services for Dependency Injection
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CustomerService>();
 
