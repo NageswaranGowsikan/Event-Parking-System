@@ -10,6 +10,8 @@
 
         // Status: Active or Deactivated
         public string Status { get; set; } = "Active";
+        // NEW: Add a Role property (default to Customer)
+        public string Role { get; set; } = "Customer";
 
         // Module 9: Account Security Fields
         public bool EmailVerified { get; set; } = false;
