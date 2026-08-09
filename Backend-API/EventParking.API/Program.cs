@@ -30,6 +30,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IEventCategoryRepository, EventCategoryRepository>();
+
+builder.Services.AddScoped<VenueService>();
+builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<EventCategoryService>();
+
 var app = builder.Build();
 
 // 4. Configure the HTTP request pipeline
