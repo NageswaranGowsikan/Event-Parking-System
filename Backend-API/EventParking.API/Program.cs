@@ -33,10 +33,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IEventCategoryRepository, EventCategoryRepository>();
+builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
 
 builder.Services.AddScoped<VenueService>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<EventCategoryService>();
+builder.Services.AddScoped<ParkingService>();
 
 var app = builder.Build();
 
