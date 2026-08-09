@@ -97,25 +97,45 @@ function updateCheckoutUI() {
     }
 }
 
-async function reserveParking() {
-    if (!selectedSlot) return;
+async function processCheckout(includeParking) {
+    // Retrieve the seats from the previous page
+    const storedSeats = sessionStorage.getItem('pendingSeatIds');
+    if (!storedSeats) {
+        alert("No seats found! Returning to event page.");
+        window.location.href = "events.html";
+        return;
+    }
+
+    const seatIds = JSON.parse(storedSeats);
+    const payload = {
+        seatIds: seatIds,
+        parkingSlotId: (includeParking && selectedSlot) ? selectedSlot.id : null
+    };
 
     try {
-        await apiFetch(`/bookings/${currentBookingId}/parking`, {
+        // Hit the new Module 6 Unified Booking Endpoint
+        const response = await apiFetch(`/bookings`, {
             method: 'POST',
-            body: JSON.stringify({ parkingSlotId: selectedSlot.id })
+            body: JSON.stringify(payload)
         });
         
-        alert(`Success! Parking spot ${selectedSlot.label} has been added to your reservation.`);
-        window.location.href = "events.html"; // Redirect back to main page
+        // Clear the session storage now that the DB has it
+        sessionStorage.removeItem('pendingSeatIds'); 
+        
+        // Redirect to the payment page to start the timer
+        window.location.href = `payment.html?bookingId=${response.bookingId}`;
         
     } catch (error) {
-        alert("Failed to reserve parking: " + error.message);
+        alert("Checkout failed: " + error.message);
     }
 }
 
+// Attach these to your two buttons in parking-map.html
+function reserveParking() {
+    if (!selectedSlot) return;
+    processCheckout(true);
+}
+
 function finishBooking() {
-    // Parking is optional, so user can just skip this step
-    alert("Booking complete! No parking was added.");
-    window.location.href = "events.html";
+    processCheckout(false);
 }

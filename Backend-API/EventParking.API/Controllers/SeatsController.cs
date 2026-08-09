@@ -68,35 +68,6 @@ namespace EventParking.API.Controllers
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        // 5. POST /api/bookings (Customer Checkout)
-        [Authorize]
-        [HttpPost("api/bookings")]
-        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto dto)
-        {
-            var email = User.FindFirstValue(ClaimTypes.Email) ?? "unknown";
-
-            // Validate all seats are available
-            var seats = await _context.Seats.Where(s => dto.SeatIds.Contains(s.Id)).ToListAsync();
-            if (seats.Count != dto.SeatIds.Count) return BadRequest("Some seats were not found.");
-            if (seats.Any(s => s.Status == "Booked")) return BadRequest("One or more seats are already booked.");
-
-            var booking = new Booking
-            {
-                CustomerEmail = email,
-                TotalPrice = seats.Sum(s => s.Price)
-            };
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync();
-
-            // Link seats and mark as booked
-            foreach (var seat in seats)
-            {
-                seat.Status = "Booked";
-                _context.BookingSeats.Add(new BookingSeat { BookingId = booking.Id, SeatId = seat.Id });
-            }
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Booking successful", BookingId = booking.Id });
-        }
+        
     }
 }

@@ -71,25 +71,14 @@ function updateCartUI() {
     }
 }
 
-async function submitBooking() {
-    const confirmBooking = confirm(`Checkout total is $${document.getElementById('totalPrice').innerText}. Proceed to checkout?`);
+function submitBooking() {
+    const confirmBooking = confirm(`Checkout total is $${document.getElementById('totalPrice').innerText}. Proceed to parking options?`);
     if (!confirmBooking) return;
 
+    // Save the seat IDs to the browser's session storage
     const seatIds = selectedSeats.map(s => s.id);
+    sessionStorage.setItem('pendingSeatIds', JSON.stringify(seatIds));
 
-    try {
-        // Capture the response to get the new BookingId
-        const response = await apiFetch(`/bookings`, {
-            method: 'POST',
-            body: JSON.stringify({ seatIds: seatIds })
-        });
-        
-        alert("Seats secured! Let's check parking options.");
-        
-        // Redirect to the parking map, passing both IDs in the URL
-        window.location.href = `parking-map.html?eventId=${currentEventId}&bookingId=${response.bookingId}`;
-        
-    } catch (error) {
-        alert("Checkout failed. Ensure you are logged in. " + error.message);
-    }
+    // Move to the parking map (we no longer have a bookingId yet)
+    window.location.href = `parking-map.html?eventId=${currentEventId}`;
 }

@@ -24,6 +24,8 @@ builder.Services.AddScoped<SeatService>();
 builder.Services.AddScoped<VenueService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<ParkingService>();
+builder.Services.AddScoped<BookingService>();
+builder.Services.AddHostedService<EventParking.API.Workers.BookingExpirationWorker>();
 
 // 3. Configure CORS (Allows your Vanilla JS frontend to talk to this API)
 builder.Services.AddCors(options =>
