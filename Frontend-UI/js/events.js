@@ -57,5 +57,6 @@ async function loadEvents() {
 
 // Temporary placeholder function for the next module
 function viewSeats(eventId) {
-    alert(`This will open the seat map for Event ID: ${eventId} when Module 4 is ready!`);
+    // Navigate to the seat map and pass the eventId in the URL query string
+    window.location.href = `seat-map.html?eventId=${eventId}`;
 }

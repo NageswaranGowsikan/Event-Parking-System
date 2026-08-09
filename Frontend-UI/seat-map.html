@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Seats</title>
+    <link rel="stylesheet" href="css/admin.css"> <!-- Reusing navbar styles -->
+    <style>
+        .seat-container { max-width: 800px; margin: 40px auto; text-align: center; }
+        .screen { background: #ccc; height: 30px; width: 100%; margin-bottom: 30px; line-height: 30px; font-weight: bold; }
+        .seat-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .seat { width: 50px; height: 50px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .seat.Available { background-color: #28a745; color: white; }
+        .seat.Booked { background-color: #dc3545; color: white; cursor: not-allowed; }
+        .seat.Locked { background-color: #ffc107; color: black; }
+        .seat:hover.Available { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h2>Event & Parking Reservations</h2>
+        <div>
+            <a href="events.html">Back to Events</a>
+        </div>
+    </nav>
+    
+    <div class="seat-container">
+        <h2>Select Your Seats</h2>
+        <div class="screen">STAGE / SCREEN</div>
+        
+        <div id="seatGrid" class="seat-grid">
+            <!-- Seats will be injected here via JavaScript -->
+            <h3>Loading seats...</h3>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/seat-map.js"></script>
+</body>
+</html>
