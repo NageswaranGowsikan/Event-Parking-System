@@ -21,11 +21,13 @@ namespace EventParking.API.Services
             _customerRepository = customerRepository;
         }
 
-        public async Task<BookingPaymentStatusDto> GetBookingPaymentStatusAsync(
-            int bookingId)
+        public async Task<BookingPaymentStatusDto>
+            GetBookingPaymentStatusAsync(int bookingId)
         {
             var booking = await GetBookingOrThrowAsync(bookingId);
-            var payment = await _paymentRepository.GetByBookingIdAsync(bookingId);
+
+            var payment =
+                await _paymentRepository.GetByBookingIdAsync(bookingId);
 
             return new BookingPaymentStatusDto(
                 booking.Id,
@@ -46,7 +48,8 @@ namespace EventParking.API.Services
 
             if (booking.Customer == null)
             {
-                throw new KeyNotFoundException("Customer not found.");
+                throw new KeyNotFoundException(
+                    "Customer not found.");
             }
 
             if (!booking.Customer.Status.Equals(
@@ -72,7 +75,9 @@ namespace EventParking.API.Services
                     "A payment has already been recorded for this booking.");
             }
 
-            if (!booking.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+            if (!booking.Status.Equals(
+                    "Pending",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 throw new PaymentValidationException(
                     $"A booking with status '{booking.Status}' cannot be paid.");
@@ -81,6 +86,7 @@ namespace EventParking.API.Services
             if (booking.ExpiresAt <= DateTime.UtcNow)
             {
                 booking.Status = "Expired";
+
                 await _bookingRepository.UpdateAsync(booking);
 
                 throw new PaymentValidationException(
@@ -93,7 +99,8 @@ namespace EventParking.API.Services
                     "The booking total must be greater than zero.");
             }
 
-            var paymentMethod = NormalizePaymentMethod(dto.PaymentMethod);
+            var paymentMethod =
+                NormalizePaymentMethod(dto.PaymentMethod);
 
             var payment = new Payment
             {
@@ -105,7 +112,9 @@ namespace EventParking.API.Services
                 PaymentDate = DateTime.UtcNow
             };
 
-            await _paymentRepository.AddAndConfirmBookingAsync(payment, booking);
+            await _paymentRepository.AddAndConfirmBookingAsync(
+                payment,
+                booking);
 
             return MapToResponse(payment, booking);
         }
@@ -113,11 +122,13 @@ namespace EventParking.API.Services
         public async Task<List<PaymentHistoryItemDto>>
             GetCustomerPaymentHistoryAsync(int customerId)
         {
-            var customer = await _customerRepository.GetByIdAsync(customerId);
+            var customer =
+                await _customerRepository.GetByIdAsync(customerId);
 
             if (customer == null)
             {
-                throw new KeyNotFoundException("Customer not found.");
+                throw new KeyNotFoundException(
+                    "Customer not found.");
             }
 
             var payments =
@@ -137,13 +148,16 @@ namespace EventParking.API.Services
                 .ToList();
         }
 
-        public async Task<PaymentReceiptDto> GetReceiptAsync(int paymentId)
+        public async Task<PaymentReceiptDto> GetReceiptAsync(
+            int paymentId)
         {
-            var payment = await _paymentRepository.GetByIdAsync(paymentId);
+            var payment =
+                await _paymentRepository.GetByIdAsync(paymentId);
 
             if (payment == null)
             {
-                throw new KeyNotFoundException("Payment not found.");
+                throw new KeyNotFoundException(
+                    "Payment not found.");
             }
 
             if (!payment.PaymentStatus.Equals(
@@ -155,10 +169,12 @@ namespace EventParking.API.Services
             }
 
             var booking = payment.Booking
-                ?? throw new KeyNotFoundException("Booking not found.");
+                ?? throw new KeyNotFoundException(
+                    "Booking not found.");
 
             var customer = booking.Customer
-                ?? throw new KeyNotFoundException("Customer not found.");
+                ?? throw new KeyNotFoundException(
+                    "Customer not found.");
 
             return new PaymentReceiptDto(
                 $"RCT-{payment.PaymentDate:yyyyMMdd}-{payment.Id:D6}",
@@ -176,13 +192,16 @@ namespace EventParking.API.Services
             );
         }
 
-        private async Task<Booking> GetBookingOrThrowAsync(int bookingId)
+        private async Task<Booking> GetBookingOrThrowAsync(
+            int bookingId)
         {
             return await _bookingRepository.GetByIdAsync(bookingId)
-                ?? throw new KeyNotFoundException("Booking not found.");
+                ?? throw new KeyNotFoundException(
+                    "Booking not found.");
         }
 
-        private static string NormalizePaymentMethod(string paymentMethod)
+        private static string NormalizePaymentMethod(
+            string paymentMethod)
         {
             if (string.IsNullOrWhiteSpace(paymentMethod))
             {
@@ -195,6 +214,7 @@ namespace EventParking.API.Services
                 "card" => "Card",
                 "cash" => "Cash",
                 "online" => "Online",
+
                 _ => throw new PaymentValidationException(
                     "Payment method must be Card, Cash, or Online.")
             };
@@ -206,7 +226,8 @@ namespace EventParking.API.Services
                 .ToString("N")[..8]
                 .ToUpperInvariant();
 
-            return $"TXN-{DateTime.UtcNow:yyyyMMddHHmmss}-{randomPart}";
+            return
+                $"TXN-{DateTime.UtcNow:yyyyMMddHHmmss}-{randomPart}";
         }
 
         private static PaymentResponseDto MapToResponse(

@@ -11,7 +11,8 @@ namespace EventParking.API.Controllers
     {
         private readonly IPaymentService _paymentService;
 
-        public PaymentsController(IPaymentService paymentService)
+        public PaymentsController(
+            IPaymentService paymentService)
         {
             _paymentService = paymentService;
         }
@@ -34,9 +35,10 @@ namespace EventParking.API.Controllers
         }
 
         [HttpPost("bookings/{bookingId:int}/payment")]
-        public async Task<ActionResult<PaymentResponseDto>> ProcessPayment(
-            int bookingId,
-            [FromBody] ProcessPaymentDto dto)
+        public async Task<ActionResult<PaymentResponseDto>>
+            ProcessPayment(
+                int bookingId,
+                [FromBody] ProcessPaymentDto dto)
         {
             try
             {
@@ -77,12 +79,14 @@ namespace EventParking.API.Controllers
         }
 
         [HttpGet("payments/{paymentId:int}/receipt")]
-        public async Task<ActionResult<PaymentReceiptDto>> GetReceipt(
-            int paymentId)
+        public async Task<ActionResult<PaymentReceiptDto>>
+            GetReceipt(int paymentId)
         {
             try
             {
-                var result = await _paymentService.GetReceiptAsync(paymentId);
+                var result =
+                    await _paymentService.GetReceiptAsync(paymentId);
+
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)
