@@ -17,6 +17,8 @@ namespace EventParking.API.Data
         public DbSet<Seat> Seats { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<BookingSeat> BookingSeats { get; set; }
+        public DbSet<ParkingSlot> ParkingSlots { get; set; }
+        public DbSet<ParkingReservation> ParkingReservations { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -61,6 +63,26 @@ namespace EventParking.API.Data
             modelBuilder.Entity<Booking>()
                 .Property(b => b.TotalPrice)
                 .HasPrecision(18, 2);
+            // Fix decimal warnings for fees
+            modelBuilder.Entity<ParkingSlot>()
+                .Property(p => p.Fee)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ParkingReservation>()
+                .Property(p => p.FeeAtReservation)
+                .HasPrecision(18, 2);
+
+            // BRD Rule: A parking slot cannot be deleted once it has an active reservation
+            modelBuilder.Entity<ParkingReservation>()
+                .HasOne(pr => pr.ParkingSlot)
+                .WithMany()
+                .HasForeignKey(pr => pr.ParkingSlotId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // BRD Rule: One parking slot can only be reserved by one customer (One-to-One enforcement)
+            modelBuilder.Entity<ParkingReservation>()
+                .HasIndex(pr => pr.BookingId)
+                .IsUnique();
         }
     }
 }

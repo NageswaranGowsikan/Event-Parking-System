@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserve Parking (Optional)</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        .parking-container { max-width: 900px; margin: 40px auto; text-align: center; }
+        .zone-header { background: #343a40; color: white; padding: 10px; margin-top: 20px; font-weight: bold; border-radius: 4px; }
+        .parking-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
+        
+        /* Rectangular shape for parking spots */
+        .slot { width: 60px; height: 90px; border-radius: 4px; border: 2px solid #ccc; cursor: pointer; font-weight: bold; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 14px;}
+        
+        .slot.Available { background-color: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
+        .slot.Reserved { background-color: #ffebee; color: #c62828; border-color: #f44336; cursor: not-allowed; opacity: 0.6; }
+        .slot.Selected { background-color: #1976d2; color: white; border-color: #0d47a1; }
+        
+        .slot span { font-size: 11px; font-weight: normal; margin-top: 5px; }
+
+        .checkout-panel { background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 30px auto; border: 1px solid #dee2e6;}
+        .btn-skip { background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: bold;}
+        .btn-confirm { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h2>Event & Parking Reservations</h2>
+    </nav>
+    
+    <div class="parking-container">
+        <h2>Reserve a Parking Spot</h2>
+        <p>Parking is optional. You may select a maximum of <strong>one</strong> spot for your vehicle.</p>
+        
+        <div id="parkingLayout">
+            <h3>Loading parking layout...</h3>
+        </div>
+
+        <div class="checkout-panel">
+            <h3>Parking Selection</h3>
+            <p>Selected Spot: <span id="selectedSlotLabel">None</span></p>
+            <p>Parking Fee: $<span id="parkingFee">0.00</span></p>
+            <hr>
+            <button class="btn-skip" onclick="finishBooking()">Skip Parking / Finish</button>
+            <button id="confirmBtn" class="btn-confirm" disabled onclick="reserveParking()">Add Parking & Finish</button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/parking-map.js"></script>
+</body>
+</html>

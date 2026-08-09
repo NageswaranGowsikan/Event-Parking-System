@@ -4,33 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select Your Seats</title>
-    <link rel="stylesheet" href="css/admin.css"> <!-- Reusing navbar styles -->
+    <link rel="stylesheet" href="css/admin.css">
     <style>
         .seat-container { max-width: 800px; margin: 40px auto; text-align: center; }
-        .screen { background: #ccc; height: 30px; width: 100%; margin-bottom: 30px; line-height: 30px; font-weight: bold; }
-        .seat-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .screen { background: #ccc; height: 30px; width: 100%; margin-bottom: 30px; font-weight: bold; }
+        .seat-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px;}
         .seat { width: 50px; height: 50px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .seat.Available { background-color: #28a745; color: white; }
-        .seat.Booked { background-color: #dc3545; color: white; cursor: not-allowed; }
-        .seat.Locked { background-color: #ffc107; color: black; }
-        .seat:hover.Available { opacity: 0.8; }
+        
+        .seat.Available { background-color: #e0e0e0; color: #333; border: 1px solid #ccc; }
+        .seat.Booked { background-color: #dc3545; color: white; cursor: not-allowed; opacity: 0.6; }
+        .seat.Selected { background-color: #28a745; color: white; border: 2px solid #1e7e34; }
+        
+        .cart-panel { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: left; max-width: 400px; margin: 0 auto; }
+        .checkout-btn { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 15px;}
+        .checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <h2>Event & Parking Reservations</h2>
-        <div>
-            <a href="events.html">Back to Events</a>
-        </div>
+        <div><a href="events.html">Back to Events</a></div>
     </nav>
     
     <div class="seat-container">
         <h2>Select Your Seats</h2>
         <div class="screen">STAGE / SCREEN</div>
-        
-        <div id="seatGrid" class="seat-grid">
-            <!-- Seats will be injected here via JavaScript -->
-            <h3>Loading seats...</h3>
+        <div id="seatGrid" class="seat-grid"><h3>Loading seats...</h3></div>
+
+        <div class="cart-panel">
+            <h3>Your Selection</h3>
+            <p>Seats: <span id="selectedSeatLabels">None</span></p>
+            <p>Total: $<span id="totalPrice">0.00</span></p>
+            <button id="checkoutBtn" class="checkout-btn" disabled onclick="submitBooking()">Checkout & Book</button>
         </div>
     </div>
 
