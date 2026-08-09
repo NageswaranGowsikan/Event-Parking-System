@@ -13,6 +13,17 @@ namespace EventParking.API.Repositories
         {
             _context = context;
         }
+        public async Task<IEnumerable<Customer>> GetCustomersAsync(string? search)
+        {
+            var query = _context.Customers.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.Name.Contains(search) || c.Email.Contains(search));
+            }
+
+            return await query.ToListAsync();
+        }
 
         public async Task<Customer?> GetByIdAsync(int id) =>
             await _context.Customers.FindAsync(id);

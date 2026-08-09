@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management - Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h2>Event Admin Panel</h2>
+        <div>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h2>Customer Management</h2>
+        
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search by name or email...">
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <div id="msg" style="display: none; padding: 10px; margin-bottom: 15px; border-radius: 4px;"></div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                <!-- Data will be populated here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth/admin-customers.js"></script>
+</body>
+</html>
