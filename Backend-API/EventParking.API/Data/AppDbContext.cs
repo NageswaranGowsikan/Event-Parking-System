@@ -15,6 +15,8 @@ namespace EventParking.API.Data
         // public DbSet<Booking> Bookings { get; set; } // Will be added by the Bookings team member
 
         public DbSet<Seat> Seats { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<BookingSeat> BookingSeats { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -40,6 +42,24 @@ namespace EventParking.API.Data
 
             modelBuilder.Entity<Seat>()
                 .Property(s => s.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<BookingSeat>()
+                .HasKey(bs => new { bs.BookingId, bs.SeatId }); // Composite primary key
+
+            modelBuilder.Entity<BookingSeat>()
+                .HasOne(bs => bs.Booking)
+                .WithMany()
+                .HasForeignKey(bs => bs.BookingId);
+
+            modelBuilder.Entity<BookingSeat>()
+                .HasOne(bs => bs.Seat)
+                .WithMany()
+                .HasForeignKey(bs => bs.SeatId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevents deleting a seat that is booked
+            // Configure Booking decimal precision
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.TotalPrice)
                 .HasPrecision(18, 2);
         }
     }

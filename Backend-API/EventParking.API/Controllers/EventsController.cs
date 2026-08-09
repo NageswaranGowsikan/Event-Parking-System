@@ -1,7 +1,6 @@
 ﻿using EventParking.API.DTOs;
 using EventParking.API.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventParking.API.Controllers
@@ -17,15 +16,17 @@ namespace EventParking.API.Controllers
             _eventService = eventService;
         }
 
-        // GET: api/events (Anyone can view events)
         [HttpGet]
-        public async Task<IActionResult> GetAllEvents()
+        public async Task<IActionResult> GetAllEvents(
+             [FromQuery] string? search,
+             [FromQuery] DateTime? date,
+             [FromQuery] int? venueId,
+             [FromQuery] int? categoryId)
         {
-            var events = await _eventService.GetAllEventsAsync();
+            var events = await _eventService.GetAllEventsAsync(search, date, venueId, categoryId);
             return Ok(events);
         }
 
-        // GET: api/events/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEvent(int id)
         {
@@ -34,13 +35,50 @@ namespace EventParking.API.Controllers
             return Ok(ev);
         }
 
-        // POST: api/events (Only Admins can create new events)
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
         {
-            var createdEvent = await _eventService.CreateEventAsync(dto);
-            return CreatedAtAction(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
+            try
+            {
+                var createdEvent = await _eventService.CreateEventAsync(dto);
+                return CreatedAtAction(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
+            }
+            catch (Exception ex)
+            {
+                // Returns 409 Conflict for overlapping dates or capacity errors
+                return Conflict(new { Message = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEvent(int id, [FromBody] CreateEventDto dto)
+        {
+            try
+            {
+                await _eventService.UpdateEventAsync(id, dto);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEvent(int id)
+        {
+            try
+            {
+                await _eventService.DeleteEventAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
     }
 }
