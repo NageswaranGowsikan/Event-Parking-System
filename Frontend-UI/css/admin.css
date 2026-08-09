@@ -1,0 +1,17 @@
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background-color: #f4f7f6; margin: 0; padding: 0; }
+.navbar { background-color: #0056b3; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+.navbar a, .navbar button { color: white; background: none; border: 1px solid white; padding: 8px 12px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+.navbar button:hover { background-color: white; color: #0056b3; }
+.container { max-width: 1000px; margin: 40px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+.search-bar input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+.search-bar button { background-color: #0056b3; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.data-table th, .data-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+.data-table th { background-color: #f8f9fa; }
+.badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.badge.active { background-color: #d4edda; color: #155724; }
+.badge.deactivated { background-color: #f8d7da; color: #721c24; }
+.btn-danger { background-color: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.btn-success { background-color: #5cb85c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
