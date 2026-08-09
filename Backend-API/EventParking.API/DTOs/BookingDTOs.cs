@@ -25,5 +25,10 @@
         public record UpdateBookingStatusDto(
             string Status
         );
+
+        public record CreateBookingDto(
+           int CustomerId,
+           decimal TotalAmount
+        );
     }
 }
