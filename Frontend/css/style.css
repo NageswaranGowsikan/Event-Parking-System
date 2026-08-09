@@ -861,7 +861,8 @@ textarea.form-control {
     .navbar,
     .page-header,
     .no-print,
-    .button-group {
+    .button-group,
+    .alert {
         display: none !important;
     }
 
@@ -871,6 +872,7 @@ textarea.form-control {
 
     .receipt {
         width: 100%;
+        margin: 0;
         padding: 20px;
         border: none;
         box-shadow: none;
