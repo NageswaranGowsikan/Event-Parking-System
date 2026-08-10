@@ -4,41 +4,257 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Management - Admin</title>
+    
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css">
+    
+    <style>
+        /* Global Styles & Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        /* Navigation Bar (Matches Dashboard) */
+        .navbar {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        #logoutBtn {
+            background: transparent;
+            color: #f87171;
+            border: 1px solid #f87171;
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #logoutBtn:hover {
+            background: #f87171;
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header-section {
+            margin-bottom: 25px;
+        }
+
+        .header-section h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+
+        /* Search Bar Area */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        #searchInput {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #searchInput:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        #searchBtn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #searchBtn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Table Styling */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            padding: 16px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Message Box */
+        #msg {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
 <body>
+    
     <nav class="navbar">
-        <h2>Event Admin Panel</h2>
-        <div>
-            <button id="logoutBtn">Logout</button>
+        <h2><i class="fa-solid fa-calendar-check"></i> EventAdmin</h2>
+        <div class="nav-right">
+                        <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
+            <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
+            <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
+            <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
+            <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
+            <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
         </div>
     </nav>
     
     <div class="container">
-        <h2>Customer Management</h2>
+        <div class="header-section">
+            <h2>Customer Management</h2>
+        </div>
         
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search by name or email...">
-            <button id="searchBtn">Search</button>
+        <div class="toolbar">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search by name, email, or ID...">
+                <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            </div>
         </div>
 
-        <div id="msg" style="display: none; padding: 10px; margin-bottom: 15px; border-radius: 4px;"></div>
+        <div id="msg" style="display: none; padding: 12px 16px; margin-bottom: 20px; border-radius: 6px;"></div>
 
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="customerTableBody">
-                <!-- Data will be populated here by JavaScript -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                    <!-- Data will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="js/api.js"></script>

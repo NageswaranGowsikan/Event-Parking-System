@@ -1,141 +1,119 @@
-let currentEventId = null;
-let currentBookingId = null;
-let selectedSlot = null; // Object to store the single selected spot { id, label, fee }
+let eventId = null;
+let bookingId = null;
+let selectedSlotId = null;
+let selectedSlotFee = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Grab IDs from the URL
     const urlParams = new URLSearchParams(window.location.search);
-    currentEventId = urlParams.get('eventId');
-    currentBookingId = urlParams.get('bookingId');
+    eventId = urlParams.get('eventId');
+    bookingId = urlParams.get('bookingId'); // MUST be passed from the seat map page!
 
-    if (!currentEventId || !currentBookingId) {
-        document.getElementById('parkingLayout').innerHTML = '<h3 style="color: red;">Invalid booking session.</h3>';
+    const errorMsg = document.getElementById('errorMsg');
+    const layout = document.getElementById('parkingLayout');
+
+    if (!eventId || !bookingId) {
+        errorMsg.style.display = 'block';
+        errorMsg.innerText = "Invalid booking session. Missing Event ID or Booking ID.";
         return;
     }
-    loadParkingSlots(currentEventId);
+
+    loadParkingSlots();
 });
 
-async function loadParkingSlots(eventId) {
-    const container = document.getElementById('parkingLayout');
-    
+async function loadParkingSlots() {
+    const layout = document.getElementById('parkingLayout');
+    layout.innerHTML = '<p>Loading parking layout...</p>';
+
     try {
         const slots = await apiFetch(`/events/${eventId}/parking-slots`);
-        container.innerHTML = ''; 
-
+        
         if (slots.length === 0) {
-            container.innerHTML = '<h3>No parking configured for this event.</h3>';
+            layout.innerHTML = '<p>No parking is available for this event.</p>';
             return;
         }
 
-        // Group slots by Zone for a nicer layout
-        const zones = [...new Set(slots.map(s => s.zone))];
-
-        zones.forEach(zone => {
-            // Create Zone Header
-            const zoneHeader = document.createElement('div');
-            zoneHeader.className = 'zone-header';
-            zoneHeader.innerText = `Zone ${zone}`;
-            container.appendChild(zoneHeader);
-
-            // Create Grid for this Zone
-            const grid = document.createElement('div');
-            grid.className = 'parking-grid';
-
-            const zoneSlots = slots.filter(s => s.zone === zone);
-            zoneSlots.forEach(slot => {
-                const btn = document.createElement('button');
-                const slotLabel = `${slot.zone}-${slot.slotNumber}`;
-                
-                // Construct button content with price
-                btn.innerHTML = `${slotLabel}<br><span>$${slot.fee.toFixed(2)}</span>`;
-                
-                // Determine CSS class
-                const isSelected = selectedSlot && selectedSlot.id === slot.id;
-                btn.className = `slot ${slot.status === 'Reserved' ? 'Reserved' : (isSelected ? 'Selected' : 'Available')}`;
-                
-                if (slot.status === 'Available') {
-                    btn.onclick = () => toggleSlot(slot, slotLabel);
-                }
-                
-                grid.appendChild(btn);
-            });
+        layout.innerHTML = '';
+        
+        // Render visual layout
+        slots.forEach(slot => {
+            const isOccupied = slot.status !== 'Available';
             
-            container.appendChild(grid);
+            const slotDiv = document.createElement('div');
+            // BRD: Prevent occupied slots from being selected
+            slotDiv.className = `slot ${isOccupied ? 'occupied' : ''}`;
+            slotDiv.id = `slot-${slot.id}`;
+            
+            slotDiv.innerHTML = `
+                <div class="slot-name">${slot.zone}-${slot.slotNumber}</div>
+                <div class="slot-fee">${isOccupied ? 'Reserved' : '$' + slot.fee.toFixed(2)}</div>
+            `;
+
+            if (!isOccupied) {
+                slotDiv.onclick = () => selectSlot(slot.id, slot.zone, slot.slotNumber, slot.fee);
+            }
+
+            layout.appendChild(slotDiv);
         });
 
     } catch (error) {
-        container.innerHTML = `<div style="color: red;">Failed to load parking: ${error.message}</div>`;
+        layout.innerHTML = `<p style="color:red;">Failed to load parking: ${error.message}</p>`;
     }
 }
 
-function toggleSlot(slot, label) {
-    // BRD Rule: Allow at most one parking slot to be selected
-    if (selectedSlot && selectedSlot.id === slot.id) {
-        // Deselect if clicking the same one
-        selectedSlot = null;
-    } else {
-        // Select the new one (replacing any previous selection)
-        selectedSlot = { id: slot.id, label: label, fee: slot.fee };
+// BRD: Select at most one available parking slot
+function selectSlot(id, zone, number, fee) {
+    // Deselect previous
+    if (selectedSlotId) {
+        document.getElementById(`slot-${selectedSlotId}`).classList.remove('selected');
     }
-    
-    updateCheckoutUI();
-    loadParkingSlots(currentEventId); // Re-render to update colors
-}
 
-function updateCheckoutUI() {
-    const labelSpan = document.getElementById('selectedSlotLabel');
-    const feeSpan = document.getElementById('parkingFee');
-    const confirmBtn = document.getElementById('confirmBtn');
-
-    if (!selectedSlot) {
-        labelSpan.innerText = "None";
-        feeSpan.innerText = "0.00";
-        confirmBtn.disabled = true;
-    } else {
-        labelSpan.innerText = selectedSlot.label;
-        feeSpan.innerText = selectedSlot.fee.toFixed(2);
-        confirmBtn.disabled = false;
-    }
-}
-
-async function processCheckout(includeParking) {
-    // Retrieve the seats from the previous page
-    const storedSeats = sessionStorage.getItem('pendingSeatIds');
-    if (!storedSeats) {
-        alert("No seats found! Returning to event page.");
-        window.location.href = "events.html";
+    // If clicking the same slot, just deselect it
+    if (selectedSlotId === id) {
+        selectedSlotId = null;
+        selectedSlotFee = 0;
+        document.getElementById('selectedSpotText').innerText = 'None';
+        document.getElementById('selectedFeeText').innerText = '$0.00';
+        document.getElementById('confirmBtn').disabled = true;
         return;
     }
 
-    const seatIds = JSON.parse(storedSeats);
-    const payload = {
-        seatIds: seatIds,
-        parkingSlotId: (includeParking && selectedSlot) ? selectedSlot.id : null
-    };
+    // Select new
+    selectedSlotId = id;
+    selectedSlotFee = fee;
+    document.getElementById(`slot-${id}`).classList.add('selected');
+    
+    // Update UI Summary
+    document.getElementById('selectedSpotText').innerText = `${zone}-${number}`;
+    document.getElementById('selectedFeeText').innerText = `$${fee.toFixed(2)}`;
+    document.getElementById('confirmBtn').disabled = false;
+}
+
+// Submits the selected parking to the C# Backend
+async function addParking() {
+    if (!selectedSlotId || !bookingId) return;
+
+    const btn = document.getElementById('confirmBtn');
+    btn.innerText = "Reserving...";
+    btn.disabled = true;
 
     try {
-        // Hit the new Module 6 Unified Booking Endpoint
-        const response = await apiFetch(`/bookings`, {
+        await apiFetch(`/bookings/${bookingId}/parking`, {
             method: 'POST',
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ parkingSlotId: selectedSlotId })
         });
         
-        // Clear the session storage now that the DB has it
-        sessionStorage.removeItem('pendingSeatIds'); 
-        
-        // Redirect to the payment page to start the timer
-        window.location.href = `payment.html?bookingId=${response.bookingId}`;
-        
+        // Success! Move to payment module.
+        window.location.href = `payment.html?bookingId=${bookingId}`;
     } catch (error) {
-        alert("Checkout failed: " + error.message);
+        alert("Failed to reserve parking: " + error.message);
+        btn.innerText = "Add Parking & Finish";
+        btn.disabled = false;
+        loadParkingSlots(); // Refresh in case someone just took it!
     }
 }
 
-// Attach these to your two buttons in parking-map.html
-function reserveParking() {
-    if (!selectedSlot) return;
-    processCheckout(true);
-}
-
-function finishBooking() {
-    processCheckout(false);
+// BRD: Allow booking to complete without parking
+function skipParking() {
+    window.location.href = `payment.html?bookingId=${bookingId}`;
 }

@@ -71,14 +71,42 @@ function updateCartUI() {
     }
 }
 
-function submitBooking() {
+async function submitBooking() {
     const confirmBooking = confirm(`Checkout total is $${document.getElementById('totalPrice').innerText}. Proceed to parking options?`);
     if (!confirmBooking) return;
 
-    // Save the seat IDs to the browser's session storage
-    const seatIds = selectedSeats.map(s => s.id);
-    sessionStorage.setItem('pendingSeatIds', JSON.stringify(seatIds));
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    checkoutBtn.innerText = "Locking Seats...";
+    checkoutBtn.disabled = true;
 
-    // Move to the parking map (we no longer have a bookingId yet)
-    window.location.href = `parking-map.html?eventId=${currentEventId}`;
+    // Grab just the IDs of the seats to send to C#
+    const seatIds = selectedSeats.map(s => s.id);
+
+    try {
+        // 1. Call the C# Backend to create the Pending booking and start the hold timer!
+        // (Make sure this JSON matches your CreateBookingDto)
+        const response = await apiFetch(`/bookings`, {
+            method: 'POST',
+            body: JSON.stringify({
+                eventId: parseInt(currentEventId), 
+                seatIds: seatIds
+            })
+        });
+
+        // 2. Grab the new ID returned by C# 
+        // Note: Change response.id to response.bookingId if your backend names it differently
+        const newBookingId = response.id || response.bookingId; 
+
+        if (!newBookingId) {
+            throw new Error("Backend did not return a Booking ID.");
+        }
+
+        // 3. Redirect to the parking map with BOTH IDs!
+        window.location.href = `parking-map.html?eventId=${currentEventId}&bookingId=${newBookingId}`;
+        
+    } catch (error) {
+        alert("Failed to create booking: " + error.message);
+        checkoutBtn.innerText = "Checkout & Book";
+        checkoutBtn.disabled = false;
+    }
 }

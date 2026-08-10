@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Venues & Categories</title>
+    
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+    
+    <style>
+        /* Global Styles & Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --dark: #1e293b;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        /* Container Layout */
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            padding: 30px;
+            flex: 1;
+            min-width: 0; /* Prevents flex items from overflowing */
+        }
+
+        .card-header {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--dark);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 15px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-group input {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-primary {
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 14px 15px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .loading-cell {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 30px !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            .card {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <h2><i class="fa-solid fa-calendar-check"></i> EventAdmin</h2>
+        <div>
+            <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
+            <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
+            <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
+            <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
+            <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
+            <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <!-- VENUES SECTION -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-building" style="color: var(--primary); font-size: 1.2rem;"></i>
+                <h3>Manage Venues</h3>
+            </div>
+            
+            <div class="form-group">
+                <input type="text" id="vName" placeholder="Venue Name">
+                <input type="text" id="vLocation" placeholder="Location">
+                <input type="number" id="vCapacity" placeholder="Total Capacity (e.g. 500)">
+                <button class="btn-primary" onclick="addVenue()">
+                    <i class="fa-solid fa-plus"></i> Add Venue
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Capacity</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="venueTable">
+                        <tr>
+                            <td colspan="4" class="loading-cell">
+                                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading venues...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CATEGORIES SECTION -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-tags" style="color: #8b5cf6; font-size: 1.2rem;"></i>
+                <h3>Manage Categories</h3>
+            </div>
+            
+            <div class="form-group">
+                <input type="text" id="cName" placeholder="Category Name (e.g. Concert)">
+                <input type="text" id="cDescription" placeholder="Description">
+                <button class="btn-primary" style="background: #8b5cf6;" onclick="addCategory()" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">
+                    <i class="fa-solid fa-plus"></i> Add Category
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTable">
+                        <tr>
+                            <td colspan="3" class="loading-cell">
+                                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading categories...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth/admin-venues.js"></script>
+</body>
+</html>

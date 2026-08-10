@@ -64,6 +64,22 @@ namespace EventParking.API.Controllers
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        
+        [Authorize]
+        [HttpGet("my-bookings")]
+        public async Task<IActionResult> GetMyBookings()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email) ?? "unknown";
+            try
+            {
+                var bookings = await _bookingService.GetCustomerBookingsAsync(email);
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+
     }
 }

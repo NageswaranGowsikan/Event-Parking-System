@@ -122,5 +122,31 @@ namespace EventParking.API.Services
             booking.Status = "Confirmed";
             await _context.SaveChangesAsync();
         }
+        public async Task<List<CustomerBookingDto>> GetCustomerBookingsAsync(string customerEmail)
+        {
+            var bookings = await _context.Bookings
+                .Where(b => b.CustomerEmail == customerEmail)
+                .OrderByDescending(b => b.BookingDate)
+                .Select(b => new CustomerBookingDto
+                {
+                    Id = b.Id,
+                    BookingNumber = b.BookingNumber,
+                    TotalPrice = b.TotalPrice,
+                    Status = b.Status,
+                    // Grab the event name and date from the first seat (if any exist)
+                    EventName = _context.BookingSeats.Where(bs => bs.BookingId == b.Id).Select(bs => bs.Seat!.Event!.Title).FirstOrDefault() ?? "Unknown",
+                    EventDate = _context.BookingSeats.Where(bs => bs.BookingId == b.Id).Select(bs => bs.Seat!.Event!.EventDate).FirstOrDefault(),
+
+                    SeatNumbers = _context.BookingSeats.Where(bs => bs.BookingId == b.Id).Select(bs => bs.Seat!.SeatNumber.ToString()).ToList(), 
+
+                    ParkingDetails = _context.ParkingReservations
+                        .Where(pr => pr.BookingId == b.Id)
+                        .Select(pr => "Zone " + pr.ParkingSlot!.Zone + " - Slot " + pr.ParkingSlot.SlotNumber)
+                        .FirstOrDefault() ?? "None"
+                })
+                .ToListAsync();
+
+            return bookings;
+        }
     }
 }

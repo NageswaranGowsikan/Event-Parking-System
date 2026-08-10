@@ -17,7 +17,7 @@ namespace EventParking.API.Controllers
             _parkingService = parkingService;
         }
 
-        [HttpGet("api/events/{eventId}/parking-slots")]
+        [HttpGet("/api/events/{eventId}/parking-slots")]
         public async Task<IActionResult> GetParkingSlots(int eventId)
         {
             var slots = await _parkingService.GetSlotsByEventAsync(eventId);
@@ -25,7 +25,7 @@ namespace EventParking.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("api/events/{eventId}/parking-slots")]
+        [HttpPost("/api/events/{eventId}/parking-slots")]
         public async Task<IActionResult> GenerateParkingLayout(int eventId, [FromBody] GenerateParkingLayoutDto dto)
         {
             try
@@ -37,7 +37,7 @@ namespace EventParking.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("api/events/{eventId}/parking-slots/{slotId}")]
+        [HttpPut("/api/events/{eventId}/parking-slots/{slotId}")]
         public async Task<IActionResult> UpdateSlot(int slotId, [FromBody] UpdateParkingSlotDto dto)
         {
             try
@@ -49,7 +49,7 @@ namespace EventParking.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("api/events/{eventId}/parking-slots/{slotId}")]
+        [HttpDelete("/api/events/{eventId}/parking-slots/{slotId}")]
         public async Task<IActionResult> DeleteSlot(int slotId)
         {
             try
@@ -61,7 +61,7 @@ namespace EventParking.API.Controllers
         }
 
         [Authorize]
-        [HttpPost("api/bookings/{bookingId}/parking")]
+        [HttpPost("/api/bookings/{bookingId}/parking")]
         public async Task<IActionResult> ReserveParking(int bookingId, [FromBody] ReserveParkingDto dto)
         {
             try
@@ -73,7 +73,7 @@ namespace EventParking.API.Controllers
         }
 
         [Authorize]
-        [HttpDelete("api/bookings/{bookingId}/parking")]
+        [HttpDelete("/api/bookings/{bookingId}/parking")]
         public async Task<IActionResult> RemoveParking(int bookingId)
         {
             try

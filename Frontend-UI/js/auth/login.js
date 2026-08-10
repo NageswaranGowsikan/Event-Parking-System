@@ -1,29 +1,31 @@
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const msgDiv = document.getElementById('msg');
-    msgDiv.style.display = 'none';
-    msgDiv.className = 'message';
-
-    const payload = {
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
-    };
+async function login(event) {
+    event.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
 
     try {
-        const data = await apiFetch('/auth/login', {
+        const response = await apiFetch('/auth/login', {
             method: 'POST',
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ email, password })
         });
-
-        // Store token and customer ID (assuming backend returns customerId on login)
-        localStorage.setItem('jwt_token', data.token);
-        localStorage.setItem('customer_id', data.customerId); 
         
-        // Redirect to profile or dashboard
-        window.location.href = 'profile.html'; 
+        // Save the token
+        localStorage.setItem('jwtToken', response.token);
+        
+        // Decode the JWT token to find the user's role
+        const payload = JSON.parse(atob(response.token.split('.')[1]));
+        const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+        alert("Login successful!");
+
+        // Smart Redirect based on Role
+        if (role === "Admin") {
+            window.location.href = "admin-dashboard.html";
+        } else {
+            window.location.href = "events.html"; // Or customer-dashboard.html
+        }
+        
     } catch (error) {
-        msgDiv.textContent = error.message;
-        msgDiv.classList.add('error');
-        msgDiv.style.display = 'block';
+        alert("Login failed: " + error.message);
     }
-});
+}

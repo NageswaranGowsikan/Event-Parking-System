@@ -8,10 +8,13 @@ namespace EventParking.API.Services
     public class PaymentService
     {
         private readonly AppDbContext _context;
+        private readonly NotificationService _notificationService; // Add this!
 
-        public PaymentService(AppDbContext context)
+        // Update your constructor to accept it
+        public PaymentService(AppDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<PaymentStatusDto> GetPaymentStatusAsync(int bookingId)
@@ -57,9 +60,17 @@ namespace EventParking.API.Services
 
             // BRD Rule: Mark booking as Confirmed once payment is completed
             booking.Status = "Confirmed";
-
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == customerEmail);
+            if (customer != null)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    customer.Id,
+                    $"Payment successful! Your booking (Ref: {booking.Id}) has been confirmed. Receipt: {payment.ReceiptNumber}"
+                );
+            }
             await _context.SaveChangesAsync();
             return payment;
+
         }
 
         public async Task<List<PaymentHistoryDto>> GetPaymentHistoryAsync(string customerEmail)

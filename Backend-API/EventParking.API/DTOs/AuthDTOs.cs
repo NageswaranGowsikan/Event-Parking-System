@@ -7,5 +7,6 @@
         public record ForgotPasswordDto(string Email);
         public record ResetPasswordDto(string Token, string NewPassword);
         public record AuthResponseDto(string Token, string Message);
+        public record ResendVerificationDto(string Email);
     }
 }

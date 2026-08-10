@@ -74,3 +74,17 @@ function viewSeats(eventId) {
     // Navigate to the seat map and pass the eventId in the URL query string
     window.location.href = `seat-map.html?eventId=${eventId}`;
 }
+function logout() {
+    localStorage.removeItem('jwtToken');
+    window.location.href = "login.html";
+}
+
+// Optional: Hide the dashboard/logout buttons if the user isn't actually logged in
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+        document.getElementById('navLinks').innerHTML = `
+            <a href="login.html" style="color: white; text-decoration: none; border: 1px solid white; padding: 5px 15px; border-radius: 4px;">Login / Register</a>
+        `;
+    }
+});
