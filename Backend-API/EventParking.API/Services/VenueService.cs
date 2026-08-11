@@ -1,102 +1,73 @@
-﻿using EventParking.API.Interfaces;
+﻿using EventParking.API.Data;
+using EventParking.API.DTOs;
 using EventParking.API.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventParking.API.Services
 {
     public class VenueService
     {
-        private readonly IVenueRepository _venueRepository;
+        private readonly AppDbContext _context;
 
-        public VenueService(IVenueRepository venueRepository)
+        public VenueService(AppDbContext context)
         {
-            _venueRepository = venueRepository;
+            _context = context;
         }
 
-        public Task<List<Venue>> GetAllAsync() =>
-            _venueRepository.GetAllAsync();
+        public async Task<List<Venue>> GetAllVenuesAsync() => await _context.Venues.ToListAsync();
 
-        public async Task<Venue> GetByIdAsync(int id)
+        public async Task<Venue?> GetVenueByIdAsync(int id) => await _context.Venues.FindAsync(id);
+
+        public async Task<Venue> CreateVenueAsync(CreateVenueDto dto)
         {
-            return await _venueRepository.GetByIdAsync(id)
-                ?? throw new Exception("Venue not found");
+            var venue = new Venue { Name = dto.Name, Location = dto.Location, Capacity = dto.Capacity, IsActive = true };
+            _context.Venues.Add(venue);
+            await _context.SaveChangesAsync();
+            return venue;
         }
 
-        public async Task<Venue> CreateAsync(
-            string name,
-            string address,
-            string? description,
-            int capacity)
+        public async Task UpdateVenueAsync(int id, CreateVenueDto dto)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new Exception("Venue name is required");
+            var venue = await _context.Venues.FindAsync(id);
+            if (venue == null) throw new Exception("Venue not found.");
 
-            if (capacity <= 0)
-                throw new Exception("Venue capacity must be greater than zero");
+            venue.Name = dto.Name;
+            venue.Location = dto.Location;
+            venue.Capacity = dto.Capacity;
+            await _context.SaveChangesAsync();
+        }
 
-            var venue = new Venue
+        // BRD Rule: A venue cannot be deleted while it has upcoming events scheduled at it.
+        public async Task DeleteVenueAsync(int id)
+        {
+            var venue = await _context.Venues.FindAsync(id);
+            if (venue == null) throw new Exception("Venue not found.");
+
+            var hasUpcomingEvents = await _context.Events.AnyAsync(e => e.VenueId == id && e.EventDate >= DateTime.UtcNow);
+            if (hasUpcomingEvents) throw new Exception("Cannot delete a venue with upcoming events scheduled.");
+
+            _context.Venues.Remove(venue);
+            await _context.SaveChangesAsync();
+        }
+
+        // BRD Rule: Check whether a venue is free for a given date/time range.
+        public async Task<List<Venue>> GetAvailableVenuesAsync(DateTime startDateTime, DateTime endDateTime, int? venueId = null)
+        {
+            // Find Venues that already have events overlapping this timeframe
+            var bookedVenueIds = await _context.Events
+                .Where(e => e.EventDate >= startDateTime && e.EventDate <= endDateTime)
+                .Select(e => e.VenueId)
+                .Distinct()
+                .ToListAsync();
+
+            var query = _context.Venues.Where(v => v.IsActive && !bookedVenueIds.Contains(v.Id));
+
+            if (venueId.HasValue)
             {
-                Name = name.Trim(),
-                Address = address.Trim(),
-                Description = description,
-                Capacity = capacity
-            };
+                query = query.Where(v => v.Id == venueId.Value);
+            }
 
-            await _venueRepository.AddAsync(venue);
-
-            return venue;
-        }
-
-        public async Task<bool> IsAvailableAsync(
-            int venueId,
-            DateTime start,
-            DateTime end)
-        {
-            var venue = await GetByIdAsync(venueId);
-
-            if (!venue.IsActive)
-                return false;
-
-            if (start >= end)
-                throw new Exception("End time must be after start time");
-
-            return !await _venueRepository.HasOverlappingEventAsync(
-                venueId,
-                start,
-                end);
-        }
-
-        public async Task DeactivateAsync(int id)
-        {
-            var venue = await GetByIdAsync(id);
-
-            venue.IsActive = false;
-
-            await _venueRepository.UpdateAsync(venue);
-        }
-
-        public async Task<Venue> UpdateAsync(
-            int id,
-            string name,
-            string address,
-            string? description,
-            int capacity)
-        {
-            var venue = await GetByIdAsync(id);
-
-            if (string.IsNullOrWhiteSpace(name))
-                throw new Exception("Venue name is required");
-
-            if (capacity <= 0)
-                throw new Exception("Venue capacity must be greater than zero");
-
-            venue.Name = name.Trim();
-            venue.Address = address.Trim();
-            venue.Description = description;
-            venue.Capacity = capacity;
-
-            await _venueRepository.UpdateAsync(venue);
-
-            return venue;
+            return await query.ToListAsync();
         }
     }
 }

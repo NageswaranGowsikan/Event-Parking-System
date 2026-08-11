@@ -1,21 +1,35 @@
 // js/events.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadEvents();
-});
+// Add this to handle the search button click
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value;
+    loadEvents(searchTerm);
+}
 
-async function loadEvents() {
+// Add this to clear the search
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    loadEvents();
+}
+
+// Update your loadEvents function to accept the parameter
+async function loadEvents(searchQuery = '') {
     const container = document.getElementById('eventsContainer');
+    container.innerHTML = '<h3 style="text-align: center; grid-column: 1 / -1;">Loading events...</h3>';
 
     try {
-        // Fetch events from the C# backend. 
-        // GET /api/events doesn't require authentication, so this will work for guests!
-        const events = await apiFetch('/events');
+        // Build the URL with the query parameter if it exists
+        let endpoint = '/events';
+        if (searchQuery) {
+            endpoint += `?search=${encodeURIComponent(searchQuery)}`;
+        }
+
+        const events = await apiFetch(endpoint);
         
-        container.innerHTML = ''; // Clear the "Loading..." text
+        container.innerHTML = ''; 
 
         if (events.length === 0) {
-            container.innerHTML = '<h3 style="text-align: center; grid-column: 1 / -1;">No upcoming events found at this time.</h3>';
+            container.innerHTML = '<h3 style="text-align: center; grid-column: 1 / -1;">No upcoming events found.</h3>';
             return;
         }
 
@@ -60,3 +74,17 @@ function viewSeats(eventId) {
     // Navigate to the seat map and pass the eventId in the URL query string
     window.location.href = `seat-map.html?eventId=${eventId}`;
 }
+function logout() {
+    localStorage.removeItem('jwtToken');
+    window.location.href = "login.html";
+}
+
+// Optional: Hide the dashboard/logout buttons if the user isn't actually logged in
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+        document.getElementById('navLinks').innerHTML = `
+            <a href="login.html" style="color: white; text-decoration: none; border: 1px solid white; padding: 5px 15px; border-radius: 4px;">Login / Register</a>
+        `;
+    }
+});

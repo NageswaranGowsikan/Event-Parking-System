@@ -1,102 +1,70 @@
-﻿using EventParking.API.Exceptions;
-using EventParking.API.Interfaces;
+﻿using EventParking.API.DTOs;
+using EventParking.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static EventParking.API.DTOs.PaymentDTOs;
+using System.Security.Claims;
 
 namespace EventParking.API.Controllers
 {
     [Route("api")]
     [ApiController]
+    [Authorize] // All payment routes require login
     public class PaymentsController : ControllerBase
     {
-        private readonly IPaymentService _paymentService;
+        private readonly PaymentService _paymentService;
 
-        public PaymentsController(
-            IPaymentService paymentService)
+        public PaymentsController(PaymentService paymentService)
         {
             _paymentService = paymentService;
         }
 
-        [HttpGet("bookings/{bookingId:int}/payment")]
-        public async Task<ActionResult<BookingPaymentStatusDto>>
-            GetBookingPaymentStatus(int bookingId)
+        // GET /api/bookings/{id}/payment
+        [HttpGet("api/bookings/{id}/payment")]
+        public async Task<IActionResult> GetPaymentStatus(int id)
         {
             try
             {
-                var result = await _paymentService
-                    .GetBookingPaymentStatusAsync(bookingId);
-
-                return Ok(result);
+                var status = await _paymentService.GetPaymentStatusAsync(id);
+                return Ok(status);
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return NotFound(new { Message = ex.Message }); }
         }
 
-        [HttpPost("bookings/{bookingId:int}/payment")]
-        public async Task<ActionResult<PaymentResponseDto>>
-            ProcessPayment(
-                int bookingId,
-                [FromBody] ProcessPaymentDto dto)
+        // POST /api/bookings/{id}/payment
+        [HttpPost("api/bookings/{id}/payment")]
+        public async Task<IActionResult> ProcessPayment(int id)
         {
+            var email = User.FindFirstValue(ClaimTypes.Email) ?? "unknown";
             try
             {
-                var result = await _paymentService
-                    .ProcessPaymentAsync(bookingId, dto);
-
-                return Ok(result);
+                var payment = await _paymentService.ProcessPaymentAsync(id, email);
+                return Ok(new { Message = "Payment completed successfully.", ReceiptNumber = payment.ReceiptNumber });
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
-            catch (PaymentConflictException ex)
-            {
-                return Conflict(new { Message = ex.Message });
-            }
-            catch (PaymentValidationException ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
+        }
         }
 
-        [HttpGet("payments/customer/{customerId:int}")]
-        public async Task<ActionResult<List<PaymentHistoryItemDto>>>
-            GetCustomerPaymentHistory(int customerId)
+        // GET /api/payments/customer/{customerId}
+        // Note: Using the authenticated token email instead of a URL param ID for tighter security
+        [HttpGet("api/payments/customer")]
+        public async Task<IActionResult> GetCustomerPayments()
         {
-            try
-            {
-                var result = await _paymentService
-                    .GetCustomerPaymentHistoryAsync(customerId);
-
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
+            var email = User.FindFirstValue(ClaimTypes.Email) ?? "unknown";
+            var history = await _paymentService.GetPaymentHistoryAsync(email);
+            return Ok(history);
         }
 
-        [HttpGet("payments/{paymentId:int}/receipt")]
-        public async Task<ActionResult<PaymentReceiptDto>>
-            GetReceipt(int paymentId)
+        // GET /api/payments/{id}/receipt
+        [HttpGet("api/payments/{id}/receipt")]
+        public async Task<IActionResult> DownloadReceipt(int id)
         {
+            var email = User.FindFirstValue(ClaimTypes.Email) ?? "unknown";
             try
             {
-                var result =
-                    await _paymentService.GetReceiptAsync(paymentId);
-
-                return Ok(result);
+                var receipt = await _paymentService.GetReceiptAsync(id, email);
+                return Ok(receipt); // The frontend can format this JSON into a downloadable PDF/HTML page
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
-            catch (PaymentValidationException ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
     }
 }

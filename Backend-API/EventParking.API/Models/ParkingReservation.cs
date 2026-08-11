@@ -4,11 +4,11 @@
     {
         public int Id { get; set; }
 
-        public string ReservationReference { get; set; }
-            = string.Empty;
+        // Link to the user's main order
+        public int BookingId { get; set; }
+        public Booking? Booking { get; set; }
 
-        public int CustomerId { get; set; }
-
+        // Link to the specific slot
         public int ParkingSlotId { get; set; }
 
         public int EventId { get; set; }
@@ -34,6 +34,7 @@
 
         public ParkingSlot? ParkingSlot { get; set; }
 
-        public Event? Event { get; set; }
+        // BRD Rule: Fee must be fixed at the time of reservation
+        public decimal FeeAtReservation { get; set; }
     }
 }

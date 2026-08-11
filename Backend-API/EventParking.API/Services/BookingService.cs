@@ -1,109 +1,88 @@
-﻿using EventParking.API.Interfaces;
+﻿using EventParking.API.Data;
+using EventParking.API.DTOs;
 using EventParking.API.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace EventParking.API.Services
 {
-    public class BookingService : IBookingService
+    public class BookingService
     {
-        private readonly IBookingRepository _bookingRepository;
-        private readonly ICustomerRepository _customerRepository;
+        private readonly AppDbContext _context;
+        private readonly int _holdDurationMinutes;
 
-        public BookingService(
-            IBookingRepository bookingRepository,
-            ICustomerRepository customerRepository)
+        public BookingService(AppDbContext context, IConfiguration config)
         {
-            _bookingRepository = bookingRepository;
-            _customerRepository = customerRepository;
+            _context = context;
+            _holdDurationMinutes = config.GetValue<int>("BookingSettings:HoldDurationMinutes", 15);
         }
 
-        public async Task<Booking?> GetBookingByIdAsync(int id)
+        public async Task<Booking> CreateBookingAsync(string customerEmail, CreateUnifiedBookingDto dto)
         {
-            return await _bookingRepository.GetByIdAsync(id);
-        }
+            if (!dto.SeatIds.Any()) throw new Exception("A booking must contain at least one seat.");
 
-        public async Task<List<Booking>> GetCustomerBookingsAsync(int customerId)
-        {
-            return await _bookingRepository.GetByCustomerIdAsync(customerId);
-        }
-
-        public async Task<List<Booking>> GetAllBookingsAsync()
-        {
-            return await _bookingRepository.GetAllAsync();
-        }
-
-        public async Task<Booking> CreateBookingAsync(
-            int customerId,
-            decimal totalAmount)
-        {
-            var customer =
-                await _customerRepository.GetByIdAsync(customerId);
-
-            if (customer == null)
-                throw new Exception("Customer not found");
-
-            if (customer.Status != "Active")
-                throw new Exception(
-                    "Only active customers can create bookings");
-
-            if (totalAmount < 0)
-                throw new Exception(
-                    "Booking amount cannot be negative");
-
-            var now = DateTime.UtcNow;
-
-            var bookingReference =
-                await GenerateBookingReferenceAsync();
-
-            var booking = new Booking
+            // Start a database transaction to ensure seats and parking succeed or fail together
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                BookingReference = bookingReference,
-                CustomerId = customerId,
-                TotalAmount = totalAmount,
-                Status = "Pending",
-                CreatedAt = now,
-                UpdatedAt = now,
-                ExpiresAt = now.AddMinutes(15)
-            };
+                // 1. Validate and Lock Seats
+                var seats = await _context.Seats.Where(s => dto.SeatIds.Contains(s.Id)).ToListAsync();
+                if (seats.Count != dto.SeatIds.Count) throw new Exception("Some seats were not found.");
+                if (seats.Any(s => s.Status != "Available")) throw new Exception("One or more seats are no longer available.");
 
-            await _bookingRepository.AddAsync(booking);
+                decimal totalPrice = seats.Sum(s => s.Price);
 
-            return booking;
-        }
+                // 2. Validate and Lock Parking (if requested)
+                ParkingSlot? parkingSlot = null;
+                if (dto.ParkingSlotId.HasValue)
+                {
+                    parkingSlot = await _context.ParkingSlots.FindAsync(dto.ParkingSlotId.Value);
+                    if (parkingSlot == null || parkingSlot.Status != "Available")
+                        throw new Exception("The selected parking slot is no longer available.");
 
-        public async Task<bool> UpdateBookingStatusAsync(
-            int bookingId,
-            string status)
-        {
-            var booking =
-                await _bookingRepository.GetByIdAsync(bookingId);
+                    totalPrice += parkingSlot.Fee;
+                }
 
-            if (booking == null)
-                return false;
+                // 3. Create the Booking Record
+                var booking = new Booking
+                {
+                    BookingNumber = $"BKG-{DateTime.UtcNow.Year}-{Guid.NewGuid().ToString().Substring(0, 6).ToUpper()}",
+                    CustomerEmail = customerEmail,
+                    TotalPrice = totalPrice,
+                    Status = "Pending",
+                    HoldExpiresAt = DateTime.UtcNow.AddMinutes(_holdDurationMinutes)
+                };
+                _context.Bookings.Add(booking);
+                await _context.SaveChangesAsync(); // Save to get the BookingId
 
-            var requestedStatus =
-                NormalizeStatus(status);
+                // 4. Attach Seats
+                foreach (var seat in seats)
+                {
+                    seat.Status = "Booked"; // Temporary hold
+                    _context.BookingSeats.Add(new BookingSeat { BookingId = booking.Id, SeatId = seat.Id });
+                }
 
-            if (requestedStatus == null)
-                throw new Exception("Invalid booking status");
+                // 5. Attach Parking
+                if (parkingSlot != null)
+                {
+                    parkingSlot.Status = "Reserved"; // Temporary hold
+                    _context.ParkingReservations.Add(new ParkingReservation
+                    {
+                        BookingId = booking.Id,
+                        ParkingSlotId = parkingSlot.Id,
+                        FeeAtReservation = parkingSlot.Fee
+                    });
+                }
 
-            // A pending booking cannot be confirmed after
-            // its 15-minute hold has already expired.
-            if (booking.Status == "Pending" &&
-                booking.ExpiresAt <= DateTime.UtcNow &&
-                requestedStatus != "Expired")
-            {
-                booking.Status = "Expired";
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-                await _bookingRepository.UpdateAsync(booking);
-
-                return false;
+                return booking;
             }
-
-            if (!CanTransition(
-                    booking.Status,
-                    requestedStatus))
+            catch
             {
-                return false;
+                await transaction.RollbackAsync();
+                throw;
             }
 
             booking.Status = requestedStatus;
@@ -113,80 +92,67 @@ namespace EventParking.API.Services
             return true;
         }
 
-        public async Task<int> ExpirePendingBookingsAsync()
+        // BRD: Cancel booking (frees seats and parking)
+        public async Task CancelBookingAsync(int bookingId, string requestedByEmail, bool isAdmin = false)
         {
-            var expiredBookings =
-                await _bookingRepository
-                    .GetExpiredPendingBookingsAsync(
-                        DateTime.UtcNow);
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) throw new Exception("Booking not found.");
 
-            foreach (var booking in expiredBookings)
-            {
-                booking.Status = "Expired";
+            if (!isAdmin && booking.CustomerEmail != requestedByEmail)
+                throw new Exception("You do not have permission to cancel this booking.");
 
-                await _bookingRepository.UpdateAsync(booking);
-            }
+            if (booking.Status == "Cancelled" || booking.Status == "Expired")
+                throw new Exception("Booking is already inactive.");
 
-            return expiredBookings.Count;
+            booking.Status = "Cancelled";
+
+            // Free Seats
+            var bookingSeats = await _context.BookingSeats.Include(bs => bs.Seat).Where(bs => bs.BookingId == bookingId).ToListAsync();
+            foreach (var bs in bookingSeats) { bs.Seat!.Status = "Available"; }
+
+            // Free Parking
+            var parkingRes = await _context.ParkingReservations.Include(pr => pr.ParkingSlot).FirstOrDefaultAsync(pr => pr.BookingId == bookingId);
+            if (parkingRes != null) { parkingRes.ParkingSlot!.Status = "Available"; }
+
+            await _context.SaveChangesAsync();
         }
 
-        private async Task<string>
-            GenerateBookingReferenceAsync()
+        // Bonus method to simulate successful payment to lock it in!
+        public async Task ConfirmPaymentAsync(int bookingId)
         {
-            string bookingReference;
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null || booking.Status != "Pending") throw new Exception("Invalid booking for payment.");
 
-            do
-            {
-                bookingReference =
-                    $"BKG-{DateTime.UtcNow:yyyyMMddHHmmss}-" +
-                    $"{Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}";
-            }
-            while (await _bookingRepository
-                .GetByReferenceAsync(bookingReference) != null);
+            if (DateTime.UtcNow > booking.HoldExpiresAt) throw new Exception("Hold period expired. Please create a new booking.");
 
-            return bookingReference;
+            booking.Status = "Confirmed";
+            await _context.SaveChangesAsync();
         }
-
-        private static string? NormalizeStatus(
-            string status)
+        public async Task<List<CustomerBookingDto>> GetCustomerBookingsAsync(string customerEmail)
         {
-            if (string.IsNullOrWhiteSpace(status))
-                return null;
+            var bookings = await _context.Bookings
+                .Where(b => b.CustomerEmail == customerEmail)
+                .OrderByDescending(b => b.BookingDate)
+                .Select(b => new CustomerBookingDto
+                {
+                    Id = b.Id,
+                    BookingNumber = b.BookingNumber,
+                    TotalPrice = b.TotalPrice,
+                    Status = b.Status,
+                    // Grab the event name and date from the first seat (if any exist)
+                    EventName = _context.BookingSeats.Where(bs => bs.BookingId == b.Id).Select(bs => bs.Seat!.Event!.Title).FirstOrDefault() ?? "Unknown",
+                    EventDate = _context.BookingSeats.Where(bs => bs.BookingId == b.Id).Select(bs => bs.Seat!.Event!.EventDate).FirstOrDefault(),
 
-            return status.Trim().ToLowerInvariant() switch
-            {
-                "pending" => "Pending",
-                "confirmed" => "Confirmed",
-                "cancelled" => "Cancelled",
-                "expired" => "Expired",
-                _ => null
-            };
-        }
+                    SeatNumbers = _context.BookingSeats.Where(bs => bs.BookingId == b.Id).Select(bs => bs.Seat!.SeatNumber.ToString()).ToList(), 
 
-        private static bool CanTransition(
-            string currentStatus,
-            string requestedStatus)
-        {
-            if (currentStatus == requestedStatus)
-                return true;
+                    ParkingDetails = _context.ParkingReservations
+                        .Where(pr => pr.BookingId == b.Id)
+                        .Select(pr => "Zone " + pr.ParkingSlot!.Zone + " - Slot " + pr.ParkingSlot.SlotNumber)
+                        .FirstOrDefault() ?? "None"
+                })
+                .ToListAsync();
 
-            return currentStatus switch
-            {
-                "Pending" =>
-                    requestedStatus is
-                        "Confirmed" or
-                        "Cancelled" or
-                        "Expired",
-
-                "Confirmed" =>
-                    requestedStatus == "Cancelled",
-
-                "Cancelled" => false,
-
-                "Expired" => false,
-
-                _ => false
-            };
+            return bookings;
         }
     }
 }

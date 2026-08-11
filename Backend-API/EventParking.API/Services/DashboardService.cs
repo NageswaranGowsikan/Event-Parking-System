@@ -1,86 +1,39 @@
-﻿using EventParking.API.Interfaces;
-using static EventParking.API.DTOs.DashboardDTOs;
+﻿using EventParking.API.Data;
+using EventParking.API.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventParking.API.Services
 {
-    public class DashboardService : IDashboardService
+    public class DashboardService
     {
-        private readonly IDashboardRepository _dashboardRepository;
+        private readonly AppDbContext _context;
 
-        public DashboardService(
-            IDashboardRepository dashboardRepository)
+        public DashboardService(AppDbContext context)
         {
-            _dashboardRepository = dashboardRepository;
+            _context = context;
         }
 
-        public async Task<AdminDashboardDto>
-            GetAdminDashboardAsync()
+        public async Task<DashboardMetricsDto> GetMetricsAsync()
         {
-            var totalEvents =
-                await _dashboardRepository.GetTotalEventsAsync();
-
-            var totalBookings =
-                await _dashboardRepository.GetTotalBookingsAsync();
-
-            var availableSeats =
-                await _dashboardRepository.GetAvailableSeatsAsync();
-
-            var occupiedParkingSlots =
-                await _dashboardRepository
-                    .GetOccupiedParkingSlotsAsync();
-
-            var totalRevenue =
-                await _dashboardRepository.GetTotalRevenueAsync();
-
-            var totalCustomers =
-                await _dashboardRepository.GetTotalCustomersAsync();
-
-            return new AdminDashboardDto(
-                totalEvents,
-                totalBookings,
-                availableSeats,
-                occupiedParkingSlots,
-                totalRevenue,
-                totalCustomers
-            );
-        }
-
-        public async Task<CustomerDashboardDto>
-            GetCustomerDashboardAsync(int customerId)
-        {
-            var customerExists =
-                await _dashboardRepository
-                    .CustomerExistsAsync(customerId);
-
-            if (!customerExists)
+            return new DashboardMetricsDto
             {
-                throw new KeyNotFoundException(
-                    "Customer not found.");
-            }
+                TotalEvents = await _context.Events.CountAsync(),
 
-            var upcomingBookings =
-                await _dashboardRepository
-                    .GetUpcomingBookingsAsync(customerId);
+                TotalBookings = await _context.Bookings.CountAsync(),
 
-            var reservedParking =
-                await _dashboardRepository
-                    .GetReservedParkingAsync(customerId);
+                // System-wide available seats
+                AvailableSeats = await _context.Seats.CountAsync(s => s.Status == "Available"),
 
-            var recentPayments =
-                await _dashboardRepository
-                    .GetRecentPaymentsAsync(customerId);
+                // Occupied parking slots
+                OccupiedParkingSlots = await _context.ParkingSlots.CountAsync(p => p.Status == "Reserved"),
 
-            var unreadNotificationCount =
-                await _dashboardRepository
-                    .GetUnreadNotificationCountAsync(customerId);
+                // Total revenue collected (calculates from the new Payments table safely)
+                TotalRevenue = await _context.Payments.SumAsync(p => (decimal?)p.Amount) ?? 0,
 
-            return new CustomerDashboardDto(
-                customerId,
-                upcomingBookings,
-                reservedParking,
-                recentPayments,
-                unreadNotificationCount
-            );
+                // For Total Customers: We count unique emails that have made a booking. 
+                // Once Module 1 (Customer Management) is fully complete, you can swap this to: await _context.Customers.CountAsync()
+                TotalCustomers = await _context.Bookings.Select(b => b.CustomerEmail).Distinct().CountAsync()
+            };
         }
     }
 }

@@ -7,11 +7,11 @@ document.getElementById('searchBtn').addEventListener('click', () => {
     loadCustomers(query);
 });
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
+window.logout = function() {
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('customer_id');
     window.location.href = 'login.html';
-});
+};
 
 async function loadCustomers(searchQuery = '') {
     const msgDiv = document.getElementById('msg');

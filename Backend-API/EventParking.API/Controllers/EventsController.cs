@@ -1,7 +1,6 @@
 ﻿using EventParking.API.DTOs;
 using EventParking.API.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static EventParking.API.DTOs.EventDTOs;
 
@@ -18,14 +17,17 @@ namespace EventParking.API.Controllers
             _service = service;
         }
 
-        // GET: api/events (Anyone can view events)
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllEvents(
+             [FromQuery] string? search,
+             [FromQuery] DateTime? date,
+             [FromQuery] int? venueId,
+             [FromQuery] int? categoryId)
         {
-            return Ok(await _service.GetAllAsync());
+            var events = await _eventService.GetAllEventsAsync(search, date, venueId, categoryId);
+            return Ok(events);
         }
 
-        // GET: api/events/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -42,55 +44,45 @@ namespace EventParking.API.Controllers
             }
         }
 
-        // POST: api/events (Only Admins can create new events)
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> Create(
-            [FromBody] CreateEventDto request)
+        public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
         {
             try
             {
-                var eventItem =
-                    await _service.CreateAsync(
-                        request.Title,
-                        request.Description,
-                        request.VenueId,
-                        request.EventCategoryId,
-                        request.StartDateTime,
-                        request.EndDateTime,
-                        request.Capacity);
-
-                return CreatedAtAction(
-                    nameof(GetById),
-                    new { id = eventItem.Id },
-                    eventItem);
+                var createdEvent = await _eventService.CreateEventAsync(dto);
+                return CreatedAtAction(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    Message = ex.Message
-                });
+                // Returns 409 Conflict for overlapping dates or capacity errors
+                return Conflict(new { Message = ex.Message });
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-    int id,
-    [FromBody] UpdateEventDto request)
+        public async Task<IActionResult> UpdateEvent(int id, [FromBody] CreateEventDto dto)
         {
             try
             {
-                return Ok(await _service.UpdateAsync(
-                    id,
-                    request.Title,
-                    request.Description,
-                    request.VenueId,
-                    request.EventCategoryId,
-                    request.StartDateTime,
-                    request.EndDateTime,
-                    request.Capacity,
-                    request.Status));
+                await _eventService.UpdateEventAsync(id, dto);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEvent(int id)
+        {
+            try
+            {
+                await _eventService.DeleteEventAsync(id);
+                return NoContent();
             }
             catch (Exception ex)
             {

@@ -1,147 +1,93 @@
 ﻿using EventParking.API.DTOs;
 using EventParking.API.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventParking.API.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
     [Route("api/[controller]")]
     public class ParkingController : ControllerBase
     {
-        private readonly ParkingService _service;
+        private readonly ParkingService _parkingService;
 
-        public ParkingController(ParkingService service)
+        public ParkingController(ParkingService parkingService)
         {
-            _service = service;
+            _parkingService = parkingService;
         }
 
-        [HttpPost("slots")]
-        public async Task<IActionResult> CreateSlot(
-            [FromBody] CreateParkingSlotDto request)
+        [HttpGet("/api/events/{eventId}/parking-slots")]
+        public async Task<IActionResult> GetParkingSlots(int eventId)
         {
-            try
-            {
-                var result =
-                    await _service.CreateSlotAsync(request);
-
-                return CreatedAtAction(
-                    nameof(GetSlotsByVenue),
-                    new { venueId = result.VenueId },
-                    result);
-            }
+            var slots = await _parkingService.GetSlotsByEventAsync(eventId);
+            return Ok(slots);
+        }
             catch (Exception ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
         }
 
-        [HttpGet("slots/venue/{venueId}")]
-        public async Task<IActionResult> GetSlotsByVenue(
-            int venueId)
+        [Authorize(Roles = "Admin")]
+        [HttpPost("/api/events/{eventId}/parking-slots")]
+        public async Task<IActionResult> GenerateParkingLayout(int eventId, [FromBody] GenerateParkingLayoutDto dto)
         {
             try
             {
-                return Ok(
-                    await _service.GetSlotsByVenueAsync(venueId));
+                await _parkingService.GenerateLayoutAsync(eventId, dto);
+                return Ok(new { Message = "Parking layout generated successfully." });
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        [HttpGet("slots/{slotId}/availability")]
-        public async Task<IActionResult> CheckAvailability(
-            int slotId,
-            [FromQuery] DateTime start,
-            [FromQuery] DateTime end)
+        [Authorize(Roles = "Admin")]
+        [HttpPut("/api/events/{eventId}/parking-slots/{slotId}")]
+        public async Task<IActionResult> UpdateSlot(int slotId, [FromBody] UpdateParkingSlotDto dto)
         {
             try
             {
-                var available =
-                    await _service.CheckAvailabilityAsync(
-                        slotId,
-                        start,
-                        end);
-
-                return Ok(new
-                {
-                    ParkingSlotId = slotId,
-                    Available = available
-                });
+                await _parkingService.UpdateSlotAsync(slotId, dto);
+                return NoContent();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        [HttpPost("reservations")]
-        public async Task<IActionResult> Reserve(
-            [FromBody] CreateParkingReservationDto request)
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("/api/events/{eventId}/parking-slots/{slotId}")]
+        public async Task<IActionResult> DeleteSlot(int slotId)
         {
             try
             {
-                var result =
-                    await _service.ReserveAsync(request);
-
-                return CreatedAtAction(
-                    nameof(GetReservation),
-                    new { id = result.Id },
-                    result);
+                await _parkingService.DeleteSlotAsync(slotId);
+                return NoContent();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        [HttpGet("reservations/{id}")]
-        public async Task<IActionResult> GetReservation(int id)
+        [Authorize]
+        [HttpPost("/api/bookings/{bookingId}/parking")]
+        public async Task<IActionResult> ReserveParking(int bookingId, [FromBody] ReserveParkingDto dto)
         {
             try
             {
-                return Ok(
-                    await _service.GetReservationAsync(id));
+                await _parkingService.ReserveParkingAsync(bookingId, dto.ParkingSlotId);
+                return Ok(new { Message = "Parking slot successfully added to booking." });
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        [HttpGet("reservations/customer/{customerId}")]
-        public async Task<IActionResult> GetCustomerReservations(
-            int customerId)
+        [Authorize]
+        [HttpDelete("/api/bookings/{bookingId}/parking")]
+        public async Task<IActionResult> RemoveParking(int bookingId)
         {
             try
             {
-                return Ok(
-                    await _service
-                        .GetCustomerReservationsAsync(customerId));
+                await _parkingService.RemoveParkingReservationAsync(bookingId);
+                return NoContent();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
-
-        [HttpPut("reservations/{id}/status")]
-        public async Task<IActionResult> UpdateStatus(
-            int id,
-            [FromBody] UpdateParkingReservationStatusDto request)
-        {
-            try
-            {
-                return Ok(
-                    await _service.UpdateStatusAsync(
-                        id,
-                        request.Status));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
     }
 }

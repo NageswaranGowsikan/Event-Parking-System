@@ -57,5 +57,16 @@ namespace EventParking.API.Controllers
             try { await _authService.ResetPasswordAsync(dto); return Ok(new { Message = "Password reset successful." }); }
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationDto dto)
+        {
+            var success = await _authService.ResendVerificationEmailAsync(dto);
+            if (!success)
+            {
+                // Return Ok anyway to prevent email enumeration (Module 9 Business Rule)
+                return Ok(new { Message = "If the account exists and is unverified, a new link has been sent." });
+            }
+            return Ok(new { Message = "A new verification email has been sent." });
+        }
     }
 }

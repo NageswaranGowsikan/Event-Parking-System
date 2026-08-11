@@ -12,273 +12,119 @@ namespace EventParking.API.Services
         private readonly AppDbContext _context;
         private readonly NotificationService _notificationService;
 
-        public ParkingService(
-            IParkingRepository parkingRepository,
-            AppDbContext context,
-            NotificationService notificationService)
+        public ParkingService(AppDbContext context)
         {
             _parkingRepository = parkingRepository;
             _context = context;
             _notificationService = notificationService;
         }
 
-        public async Task<ParkingSlotResponseDto> CreateSlotAsync(
-            CreateParkingSlotDto request)
+        public async Task<List<ParkingSlotDto>> GetSlotsByEventAsync(int eventId)
         {
-            var venue = await _context.Venues
-                .FirstOrDefaultAsync(x => x.Id == request.VenueId);
+            return await _context.ParkingSlots
+                .Where(p => p.EventId == eventId)
+                .OrderBy(p => p.Zone).ThenBy(p => p.SlotNumber)
+                .Select(p => new ParkingSlotDto
+                {
+                    Id = p.Id,
+                    EventId = p.EventId,
+                    Zone = p.Zone,
+                    SlotNumber = p.SlotNumber,
+                    Fee = p.Fee,
+                    Status = p.Status
+                }).ToListAsync();
+        }
 
-            if (venue == null)
-                throw new Exception("Venue not found");
+        public async Task GenerateLayoutAsync(int eventId, GenerateParkingLayoutDto dto)
+        {
+            var ev = await _context.Events.FindAsync(eventId);
+            if (ev == null) throw new Exception("Event not found.");
 
-            if (!venue.IsActive)
-                throw new Exception("Venue is not active");
-
-            if (string.IsNullOrWhiteSpace(request.SlotNumber))
-                throw new Exception("Parking slot number is required");
-
-            if (string.IsNullOrWhiteSpace(request.Zone))
-                throw new Exception("Parking zone is required");
-
-            if (request.Price < 0)
-                throw new Exception("Parking price cannot be negative");
-
-            if (await _parkingRepository.SlotNumberExistsAsync(
-                    request.VenueId,
-                    request.SlotNumber.Trim()))
+            for (int i = 1; i <= dto.NumberOfSlots; i++)
             {
-                throw new Exception(
-                    "Parking slot number already exists for this venue");
+                _context.ParkingSlots.Add(new ParkingSlot
+                {
+                    EventId = eventId,
+                    Zone = dto.Zone,
+                    SlotNumber = i,
+                    Fee = dto.DefaultFee,
+                    Status = "Available"
+                });
             }
-
-            var slot = new ParkingSlot
-            {
-                VenueId = request.VenueId,
-                SlotNumber = request.SlotNumber.Trim(),
-                Zone = request.Zone.Trim(),
-                VehicleType = string.IsNullOrWhiteSpace(request.VehicleType)
-                    ? "Car"
-                    : request.VehicleType.Trim(),
-                Price = request.Price
-            };
-
-            await _parkingRepository.AddSlotAsync(slot);
-
-            return MapSlot(slot, venue.Name);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ParkingSlotResponseDto>>
-            GetSlotsByVenueAsync(int venueId)
+        public async Task UpdateSlotAsync(int slotId, UpdateParkingSlotDto dto)
         {
-            var slots =
-                await _parkingRepository.GetSlotsByVenueAsync(venueId);
+            var slot = await _context.ParkingSlots.FindAsync(slotId);
+            if (slot == null) throw new Exception("Slot not found.");
 
-            return slots.Select(x =>
-                MapSlot(x, x.Venue?.Name ?? string.Empty)).ToList();
+            var isReserved = await _context.ParkingReservations.AnyAsync(r => r.ParkingSlotId == slotId);
+            if (isReserved) throw new Exception("Cannot edit a slot that is already reserved.");
+
+            slot.Zone = dto.Zone;
+            slot.SlotNumber = dto.SlotNumber;
+            slot.Fee = dto.Fee;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> CheckAvailabilityAsync(
-            int slotId,
-            DateTime start,
-            DateTime end)
+        public async Task DeleteSlotAsync(int slotId)
         {
-            if (start >= end)
-                throw new Exception(
-                    "End time must be after start time");
+            var slot = await _context.ParkingSlots.FindAsync(slotId);
+            if (slot == null) throw new Exception("Slot not found.");
 
-            var slot =
-                await _parkingRepository.GetSlotByIdAsync(slotId);
+            var isReserved = await _context.ParkingReservations.AnyAsync(r => r.ParkingSlotId == slotId);
+            if (isReserved) throw new Exception("Cannot delete a slot with an active reservation.");
 
-            if (slot == null || !slot.IsActive)
-                throw new Exception(
-                    "Parking slot not found or inactive");
-
-            return await _parkingRepository.IsSlotAvailableAsync(
-                slotId,
-                start,
-                end);
+            _context.ParkingSlots.Remove(slot);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<ParkingReservationResponseDto>
-            ReserveAsync(CreateParkingReservationDto request)
+        public async Task ReserveParkingAsync(int bookingId, int slotId)
         {
-            if (request.StartDateTime >= request.EndDateTime)
-                throw new Exception(
-                    "End time must be after start time");
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) throw new Exception("Booking not found.");
 
-            if (string.IsNullOrWhiteSpace(request.VehicleNumber))
-                throw new Exception("Vehicle number is required");
+            var hasParking = await _context.ParkingReservations.AnyAsync(r => r.BookingId == bookingId);
+            if (hasParking) throw new Exception("Booking already has a parking slot. Only one slot per booking is allowed.");
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(x => x.Id == request.CustomerId);
+            var slot = await _context.ParkingSlots.FindAsync(slotId);
+            if (slot == null) throw new Exception("Parking slot not found.");
+            if (slot.Status == "Reserved") throw new Exception("Slot is already reserved.");
 
-            if (customer == null)
-                throw new Exception("Customer not found");
-
-            var slot = await _parkingRepository
-                .GetSlotByIdAsync(request.ParkingSlotId);
-
-            if (slot == null || !slot.IsActive)
-                throw new Exception(
-                    "Parking slot not found or inactive");
-
-            var eventItem = await _context.Events
-                .FirstOrDefaultAsync(x => x.Id == request.EventId);
-
-            if (eventItem == null)
-                throw new Exception("Event not found");
-
-            if (eventItem.VenueId != slot.VenueId)
-                throw new Exception(
-                    "Parking slot does not belong to the event venue");
-
-            var available =
-                await _parkingRepository.IsSlotAvailableAsync(
-                    request.ParkingSlotId,
-                    request.StartDateTime,
-                    request.EndDateTime);
-
-            if (!available)
-                throw new Exception(
-                    "Parking slot is already reserved for the selected time");
-
+            // Apply reservation
+            slot.Status = "Reserved";
             var reservation = new ParkingReservation
             {
-                ReservationReference =
-                    $"PRK-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}",
-                CustomerId = request.CustomerId,
-                ParkingSlotId = request.ParkingSlotId,
-                EventId = request.EventId,
-                VehicleNumber = request.VehicleNumber.Trim().ToUpper(),
-                StartDateTime = request.StartDateTime,
-                EndDateTime = request.EndDateTime,
-                Amount = slot.Price,
-                Status = "Reserved"
+                BookingId = bookingId,
+                ParkingSlotId = slotId,
+                FeeAtReservation = slot.Fee
             };
 
-            await _parkingRepository.AddReservationAsync(reservation);
+            // Add the parking fee to the booking's total price
+            booking.TotalPrice += slot.Fee;
 
-            await _notificationService.CreateSystemNotificationAsync(
-                reservation.CustomerId,
-                "Parking",
-                "Parking Reservation Confirmed",
-                $"Parking slot {slot.SlotNumber} has been reserved successfully.",
-                "ParkingReservation",
-            reservation.Id);
-
-            reservation.ParkingSlot = slot;
-            reservation.Event = eventItem;
-
-            return MapReservation(reservation);
+            _context.ParkingReservations.Add(reservation);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<ParkingReservationResponseDto>
-            GetReservationAsync(int id)
+        public async Task RemoveParkingReservationAsync(int bookingId)
         {
-            var reservation =
-                await _parkingRepository.GetReservationByIdAsync(id)
-                ?? throw new Exception(
-                    "Parking reservation not found");
+            var reservation = await _context.ParkingReservations
+                .Include(r => r.ParkingSlot)
+                .Include(r => r.Booking)
+                .FirstOrDefaultAsync(r => r.BookingId == bookingId);
 
-            return MapReservation(reservation);
-        }
+            if (reservation == null) throw new Exception("No parking reservation found for this booking.");
 
-        public async Task<List<ParkingReservationResponseDto>>
-            GetCustomerReservationsAsync(int customerId)
-        {
-            var reservations =
-                await _parkingRepository
-                    .GetReservationsByCustomerAsync(customerId);
+            // Deduct the fixed fee from the booking total
+            reservation.Booking!.TotalPrice -= reservation.FeeAtReservation;
 
-            return reservations
-                .Select(MapReservation)
-                .ToList();
-        }
+            // Free up the slot
+            reservation.ParkingSlot!.Status = "Available";
 
-        public async Task<ParkingReservationResponseDto>
-            UpdateStatusAsync(int id, string status)
-        {
-            var reservation =
-                await _parkingRepository.GetReservationByIdAsync(id)
-                ?? throw new Exception(
-                    "Parking reservation not found");
-
-            var allowed = new[]
-            {
-                "Reserved",
-                "CheckedIn",
-                "Completed",
-                "Cancelled"
-            };
-
-            var selected = allowed.FirstOrDefault(x =>
-                x.Equals(
-                    status,
-                    StringComparison.OrdinalIgnoreCase));
-
-            if (selected == null)
-                throw new Exception(
-                    "Invalid parking reservation status");
-
-            reservation.Status = selected;
-
-            await _parkingRepository
-                .UpdateReservationAsync(reservation);
-
-            // Ingana add pannanum
-
-            await _notificationService.CreateSystemNotificationAsync(
-                reservation.CustomerId,
-                "Parking",
-                "Parking Reservation Updated",
-                $"Your parking reservation status is now {reservation.Status}.",
-                "ParkingReservation",
-                reservation.Id);
-
-            return MapReservation(reservation);
-        }
-
-        private static ParkingSlotResponseDto MapSlot(
-            ParkingSlot slot,
-            string venueName)
-        {
-            return new ParkingSlotResponseDto
-            {
-                Id = slot.Id,
-                VenueId = slot.VenueId,
-                VenueName = venueName,
-                SlotNumber = slot.SlotNumber,
-                Zone = slot.Zone,
-                VehicleType = slot.VehicleType,
-                Price = slot.Price,
-                IsActive = slot.IsActive
-            };
-        }
-
-        private static ParkingReservationResponseDto
-            MapReservation(ParkingReservation reservation)
-        {
-            return new ParkingReservationResponseDto
-            {
-                Id = reservation.Id,
-                ReservationReference =
-                    reservation.ReservationReference,
-                CustomerId = reservation.CustomerId,
-                ParkingSlotId = reservation.ParkingSlotId,
-                SlotNumber =
-                    reservation.ParkingSlot?.SlotNumber ?? string.Empty,
-                EventId = reservation.EventId,
-                EventTitle =
-                    reservation.Event?.Title ?? string.Empty,
-                VehicleNumber = reservation.VehicleNumber,
-                StartDateTime = reservation.StartDateTime,
-                EndDateTime = reservation.EndDateTime,
-                Amount = reservation.Amount,
-                Status = reservation.Status,
-                CreatedAt = reservation.CreatedAt
-            };
-
-
+            _context.ParkingReservations.Remove(reservation);
+            await _context.SaveChangesAsync();
         }
     }
 }

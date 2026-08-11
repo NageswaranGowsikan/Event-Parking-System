@@ -1,4 +1,6 @@
-﻿using EventParking.API.Services;
+﻿using EventParking.API.DTOs;
+using EventParking.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EventParking.API.DTOs.VenueDTOs;
 
@@ -8,105 +10,61 @@ namespace EventParking.API.Controllers
     [ApiController]
     public class VenuesController : ControllerBase
     {
-        private readonly VenueService _service;
+        private readonly VenueService _venueService;
 
-        public VenuesController(VenueService service)
+        public VenuesController(VenueService venueService)
         {
-            _service = service;
+            _venueService = venueService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() =>
-            Ok(await _service.GetAllAsync());
+        public async Task<IActionResult> GetAllVenues() => Ok(await _venueService.GetAllVenuesAsync());
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetVenue(int id)
         {
-            try
-            {
-                return Ok(await _service.GetByIdAsync(id));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
+            var venue = await _venueService.GetVenueByIdAsync(id);
+            if (venue == null) return NotFound();
+            return Ok(venue);
         }
 
+        [HttpGet("available")]
+        public async Task<IActionResult> GetAvailableVenues([FromQuery] DateTime startDateTime, [FromQuery] DateTime endDateTime, [FromQuery] int? venueId)
+        {
+            var availableVenues = await _venueService.GetAvailableVenuesAsync(startDateTime, endDateTime, venueId);
+            return Ok(availableVenues);
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> Create(
-            [FromBody] CreateVenueDto request)
+        public async Task<IActionResult> CreateVenue([FromBody] CreateVenueDto dto)
         {
-            try
-            {
-                var venue = await _service.CreateAsync(
-                    request.Name,
-                    request.Address,
-                    request.Description,
-                    request.Capacity);
-
-                return CreatedAtAction(
-                    nameof(GetById),
-                    new { id = venue.Id },
-                    venue);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            var venue = await _venueService.CreateVenueAsync(dto);
+            return CreatedAtAction(nameof(GetVenue), new { id = venue.Id }, venue);
         }
 
-        [HttpGet("{id}/availability")]
-        public async Task<IActionResult> CheckAvailability(
-            int id,
-            [FromQuery] DateTime start,
-            [FromQuery] DateTime end)
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateVenue(int id, [FromBody] CreateVenueDto dto)
         {
             try
             {
-                var available =
-                    await _service.IsAvailableAsync(id, start, end);
-
-                return Ok(new { Available = available });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Deactivate(int id)
-        {
-            try
-            {
-                await _service.DeactivateAsync(id);
-
+                await _venueService.UpdateVenueAsync(id, dto);
                 return NoContent();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-            int id,
-            [FromBody] UpdateVenueDto request)
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteVenue(int id)
         {
             try
             {
-                return Ok(await _service.UpdateAsync(
-                    id,
-                    request.Name,
-                    request.Address,
-                    request.Description,
-                    request.Capacity));
+                await _venueService.DeleteVenueAsync(id);
+                return NoContent();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
     }
 }

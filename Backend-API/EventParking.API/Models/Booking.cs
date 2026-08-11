@@ -3,25 +3,14 @@
     public class Booking
     {
         public int Id { get; set; }
+        public string BookingNumber { get; set; } = string.Empty; // e.g., BKG-2026-000123
+        public string CustomerEmail { get; set; } = string.Empty;
 
-        public string BookingReference { get; set; } = string.Empty;
+        public DateTime BookingDate { get; set; } = DateTime.UtcNow;
+        public decimal TotalPrice { get; set; }
 
-        public int CustomerId { get; set; }
-
-        public decimal TotalAmount { get; set; } = 0;
-
-        // Pending, Confirmed, Cancelled, Expired
-        public string Status { get; set; } = "Pending";
-
-        // A pending booking is held for 15 minutes.
-        public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddMinutes(15);
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        public Customer? Customer { get; set; }
-
-        public Payment? Payment { get; set; }
+        // NEW MODULE 6 FIELDS
+        public string Status { get; set; } = "Pending"; // Pending, Confirmed, Cancelled, Expired
+        public DateTime HoldExpiresAt { get; set; }
     }
 }

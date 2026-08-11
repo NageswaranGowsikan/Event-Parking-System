@@ -1,196 +1,75 @@
-﻿using EventParking.API.Exceptions;
-using EventParking.API.Interfaces;
+﻿using EventParking.API.Data;
+using EventParking.API.DTOs;
 using EventParking.API.Models;
-using static EventParking.API.DTOs.PaymentDTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventParking.API.Services
 {
-    public class PaymentService : IPaymentService
+    public class PaymentService
     {
-        private readonly IPaymentRepository _paymentRepository;
-        private readonly IBookingRepository _bookingRepository;
-        private readonly ICustomerRepository _customerRepository;
+        private readonly AppDbContext _context;
+        private readonly NotificationService _notificationService; // Add this!
 
-        public PaymentService(
-            IPaymentRepository paymentRepository,
-            IBookingRepository bookingRepository,
-            ICustomerRepository customerRepository)
+        // Update your constructor to accept it
+        public PaymentService(AppDbContext context, NotificationService notificationService)
         {
-            _paymentRepository = paymentRepository;
-            _bookingRepository = bookingRepository;
-            _customerRepository = customerRepository;
+            _context = context;
+            _notificationService = notificationService;
         }
 
-        public async Task<BookingPaymentStatusDto>
-            GetBookingPaymentStatusAsync(int bookingId)
+        public async Task<PaymentStatusDto> GetPaymentStatusAsync(int bookingId)
         {
-            var booking = await GetBookingOrThrowAsync(bookingId);
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) throw new Exception("Booking not found.");
 
-            var payment =
-                await _paymentRepository.GetByBookingIdAsync(bookingId);
+            var isPaid = await _context.Payments.AnyAsync(p => p.BookingId == bookingId);
 
-            return new BookingPaymentStatusDto(
-                booking.Id,
-                booking.BookingReference,
-                booking.TotalAmount,
-                booking.Status,
-                payment?.PaymentStatus ?? "Pending",
-                payment?.TransactionId,
-                payment?.PaymentDate
-            );
+            return new PaymentStatusDto
+            {
+                BookingId = booking.Id,
+                AmountDue = booking.TotalPrice,
+                PaymentStatus = isPaid ? "Paid" : "Pending",
+                IsPaid = isPaid
+            };
         }
 
-        public async Task<PaymentResponseDto> ProcessPaymentAsync(
-            int bookingId,
-            ProcessPaymentDto dto)
+        public async Task<Payment> ProcessPaymentAsync(int bookingId, string customerEmail)
         {
-            var booking = await GetBookingOrThrowAsync(bookingId);
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null) throw new Exception("Booking not found.");
 
-            if (booking.Customer == null)
-            {
-                throw new KeyNotFoundException(
-                    "Customer not found.");
-            }
+            if (booking.CustomerEmail != customerEmail)
+                throw new Exception("You do not have permission to pay for this booking.");
 
-            if (!booking.Customer.Status.Equals(
-                    "Active",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                throw new PaymentValidationException(
-                    "A deactivated customer cannot complete a payment.");
-            }
+            if (booking.Status == "Expired" || booking.Status == "Cancelled")
+                throw new Exception("Cannot process payment for an inactive booking. Please create a new booking.");
 
-            if (!booking.Customer.EmailVerified)
-            {
-                throw new PaymentValidationException(
-                    "The customer must verify their email before completing payment.");
-            }
+            var alreadyPaid = await _context.Payments.AnyAsync(p => p.BookingId == bookingId);
+            if (alreadyPaid) throw new Exception("Payment has already been recorded for this booking.");
 
-            var existingPayment =
-                await _paymentRepository.GetByBookingIdAsync(bookingId);
-
-            if (existingPayment != null)
-            {
-                throw new PaymentConflictException(
-                    "A payment has already been recorded for this booking.");
-            }
-
-            if (!booking.Status.Equals(
-                    "Pending",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                throw new PaymentValidationException(
-                    $"A booking with status '{booking.Status}' cannot be paid.");
-            }
-
-            if (booking.ExpiresAt <= DateTime.UtcNow)
-            {
-                booking.Status = "Expired";
-
-                await _bookingRepository.UpdateAsync(booking);
-
-                throw new PaymentValidationException(
-                    "The booking hold has expired. Create a new booking before paying.");
-            }
-
-            if (booking.TotalAmount <= 0)
-            {
-                throw new PaymentValidationException(
-                    "The booking total must be greater than zero.");
-            }
-
-            var paymentMethod =
-                NormalizePaymentMethod(dto.PaymentMethod);
-
+            // Create the payment record
             var payment = new Payment
             {
                 BookingId = booking.Id,
-                Amount = booking.TotalAmount,
-                PaymentMethod = paymentMethod,
-                TransactionId = GenerateTransactionId(),
-                PaymentStatus = "Completed",
-                PaymentDate = DateTime.UtcNow
+                CustomerEmail = customerEmail,
+                Amount = booking.TotalPrice,
+                ReceiptNumber = $"RCPT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 6).ToUpper()}"
             };
 
-            await _paymentRepository.AddAndConfirmBookingAsync(
-                payment,
-                booking);
+            _context.Payments.Add(payment);
 
-            return MapToResponse(payment, booking);
-        }
-
-        public async Task<List<PaymentHistoryItemDto>>
-            GetCustomerPaymentHistoryAsync(int customerId)
-        {
-            var customer =
-                await _customerRepository.GetByIdAsync(customerId);
-
-            if (customer == null)
+            // BRD Rule: Mark booking as Confirmed once payment is completed
+            booking.Status = "Confirmed";
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == customerEmail);
+            if (customer != null)
             {
-                throw new KeyNotFoundException(
-                    "Customer not found.");
+                await _notificationService.CreateNotificationAsync(
+                    customer.Id,
+                    $"Payment successful! Your booking (Ref: {booking.Id}) has been confirmed. Receipt: {payment.ReceiptNumber}"
+                );
             }
-
-            var payments =
-                await _paymentRepository.GetByCustomerIdAsync(customerId);
-
-            return payments
-                .Select(p => new PaymentHistoryItemDto(
-                    p.Id,
-                    p.BookingId,
-                    p.Booking?.BookingReference ?? string.Empty,
-                    p.Amount,
-                    p.PaymentMethod,
-                    p.TransactionId,
-                    p.PaymentStatus,
-                    p.PaymentDate
-                ))
-                .ToList();
-        }
-
-        public async Task<PaymentReceiptDto> GetReceiptAsync(
-            int paymentId)
-        {
-            var payment =
-                await _paymentRepository.GetByIdAsync(paymentId);
-
-            if (payment == null)
-            {
-                throw new KeyNotFoundException(
-                    "Payment not found.");
-            }
-
-            if (!payment.PaymentStatus.Equals(
-                    "Completed",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                throw new PaymentValidationException(
-                    "A receipt is only available for a completed payment.");
-            }
-
-            var booking = payment.Booking
-                ?? throw new KeyNotFoundException(
-                    "Booking not found.");
-
-            var customer = booking.Customer
-                ?? throw new KeyNotFoundException(
-                    "Customer not found.");
-
-            return new PaymentReceiptDto(
-                $"RCT-{payment.PaymentDate:yyyyMMdd}-{payment.Id:D6}",
-                payment.Id,
-                booking.Id,
-                booking.BookingReference,
-                customer.Id,
-                customer.Name,
-                customer.Email,
-                payment.Amount,
-                payment.PaymentMethod,
-                payment.TransactionId,
-                payment.PaymentStatus,
-                payment.PaymentDate
-            );
-        }
+            await _context.SaveChangesAsync();
+            return payment;
 
         private async Task<Booking> GetBookingOrThrowAsync(
             int bookingId)
@@ -200,50 +79,47 @@ namespace EventParking.API.Services
                     "Booking not found.");
         }
 
-        private static string NormalizePaymentMethod(
-            string paymentMethod)
+        public async Task<List<PaymentHistoryDto>> GetPaymentHistoryAsync(string customerEmail)
         {
-            if (string.IsNullOrWhiteSpace(paymentMethod))
-            {
-                throw new PaymentValidationException(
-                    "Payment method is required.");
-            }
+            return await _context.Payments
+                .Where(p => p.CustomerEmail == customerEmail)
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => new PaymentHistoryDto
+                {
+                    PaymentId = p.Id,
+                    BookingId = p.BookingId,
+                    ReceiptNumber = p.ReceiptNumber,
+                    Amount = p.Amount,
+                    PaymentDate = p.PaymentDate
+                }).ToListAsync();
+        }
 
-            return paymentMethod.Trim().ToLowerInvariant() switch
-            {
-                "card" => "Card",
-                "cash" => "Cash",
-                "online" => "Online",
+        public async Task<ReceiptDto> GetReceiptAsync(int paymentId, string customerEmail)
+        {
+            var payment = await _context.Payments
+                .Include(p => p.Booking)
+                .FirstOrDefaultAsync(p => p.Id == paymentId);
 
-                _ => throw new PaymentValidationException(
-                    "Payment method must be Card, Cash, or Online.")
+            if (payment == null) throw new Exception("Payment not found.");
+            if (payment.CustomerEmail != customerEmail) throw new Exception("Unauthorized access to receipt.");
+
+            // Need the event name, so we fetch the first seat attached to this booking
+            var bookingSeat = await _context.BookingSeats
+                .Include(bs => bs.Seat)
+                .ThenInclude(s => s!.Event)
+                .FirstOrDefaultAsync(bs => bs.BookingId == payment.BookingId);
+
+            string eventName = bookingSeat?.Seat?.Event?.Title ?? "Unknown Event";
+
+            return new ReceiptDto
+            {
+                ReceiptNumber = payment.ReceiptNumber,
+                CustomerEmail = payment.CustomerEmail,
+                PaymentDate = payment.PaymentDate,
+                TotalAmountPaid = payment.Amount,
+                BookingReference = payment.Booking!.BookingNumber,
+                EventName = eventName
             };
-        }
-
-        private static string GenerateTransactionId()
-        {
-            var randomPart = Guid.NewGuid()
-                .ToString("N")[..8]
-                .ToUpperInvariant();
-
-            return
-                $"TXN-{DateTime.UtcNow:yyyyMMddHHmmss}-{randomPart}";
-        }
-
-        private static PaymentResponseDto MapToResponse(
-            Payment payment,
-            Booking booking)
-        {
-            return new PaymentResponseDto(
-                payment.Id,
-                booking.Id,
-                booking.BookingReference,
-                payment.Amount,
-                payment.PaymentMethod,
-                payment.TransactionId,
-                payment.PaymentStatus,
-                payment.PaymentDate
-            );
         }
     }
 }

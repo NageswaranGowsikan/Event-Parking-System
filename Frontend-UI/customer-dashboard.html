@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard</title>
+    
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/admin.css">
+    
+    <style>
+        /* Global Styles & Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary: #64748b;
+            --dark: #0f172a;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            
+            /* Status Colors */
+            --success-bg: #d1fae5;
+            --success-text: #065f46;
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --neutral-bg: #f1f5f9;
+            --neutral-text: #475569;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        /* Navigation Bar (Customer Facing) */
+        .navbar {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .navbar h2 i {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: white;
+        }
+
+        .nav-links a.active {
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: #cbd5e1;
+            border: 1px solid #cbd5e1;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout:hover {
+            background: white;
+            color: var(--dark);
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .page-header h2 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            margin-bottom: 30px;
+        }
+
+        .section-card h3 {
+            margin: 0 0 20px 0;
+            font-size: 1.25rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 15px;
+        }
+
+        /* Dynamically Injected Tables Styling */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #f1f5f9;
+        }
+
+        /* Loading State */
+        .loading-text {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+
+        .status-Confirmed {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-Pending {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .status-Cancelled {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .status-Expired {
+            background: var(--neutral-bg);
+            color: var(--neutral-text);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-cancel, .btn-receipt {
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-cancel {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-receipt {
+            background: #0ea5e9;
+            color: white;
+        }
+
+        .btn-receipt:hover {
+            background: #0284c7;
+            box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+        }
+        
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 20px; flex-direction: column; gap: 15px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .section-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <h2><i class="fa-solid fa-ticket"></i> EventTix</h2>
+        <div class="nav-links">
+            <a href="events.html"><i class="fa-solid fa-magnifying-glass"></i> Browse Events</a>
+            <a href="notifications.html" class="active"><i class="fa-regular fa-bell"></i> Notifications</a>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+        </div>
+    </nav>
+    
+    <div class="dashboard-container">
+        
+        <div class="page-header">
+            <i class="fa-regular fa-circle-user" style="font-size: 2.2rem; color: var(--primary);"></i>
+            <h2>My Dashboard</h2>
+        </div>
+        
+        <!-- Bookings Section -->
+        <div class="section-card">
+            <h3><i class="fa-solid fa-calendar-check" style="color: var(--primary);"></i> My Bookings</h3>
+            <div class="table-responsive" id="bookingsContainer">
+                <div class="loading-text">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i>
+                    Loading your bookings...
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Section -->
+        <div class="section-card">
+            <h3><i class="fa-solid fa-file-invoice-dollar" style="color: #10b981;"></i> Payment History & Receipts</h3>
+            <div class="table-responsive" id="paymentsContainer">
+                <div class="loading-text">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: #10b981;"></i>
+                    Loading payment history...
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/customer-dashboard.js"></script>
+</body>
+</html>

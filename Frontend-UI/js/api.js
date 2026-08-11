@@ -1,7 +1,7 @@
 const BASE_URL = 'https://localhost:7283/api'; // Ensure this matches your Swagger port
 
 async function apiFetch(endpoint, options = {}) {
-    const token = localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('jwtToken');
     
     const headers = {
         'Content-Type': 'application/json',

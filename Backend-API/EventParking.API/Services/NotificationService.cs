@@ -11,16 +11,14 @@ namespace EventParking.API.Services
         private readonly INotificationRepository _repository;
         private readonly AppDbContext _context;
 
-        public NotificationService(
-            INotificationRepository repository,
-            AppDbContext context)
+        public NotificationService(AppDbContext context)
         {
             _repository = repository;
             _context = context;
         }
 
-        public async Task<NotificationResponseDto> CreateAsync(
-            CreateNotificationDto request)
+        // BRD Rule: Internal use only. Call this from BookingService/PaymentService.
+        public async Task CreateNotificationAsync(int customerId, string message)
         {
             var customerExists =
                 await _context.Customers.AnyAsync(
@@ -66,85 +64,40 @@ namespace EventParking.API.Services
                 Type = type,
                 Title = title,
                 Message = message,
-                RelatedEntityType = relatedEntityType,
-                RelatedEntityId = relatedEntityId
-            });
-        }
-
-        public async Task<List<NotificationResponseDto>>
-            GetCustomerNotificationsAsync(int customerId)
-        {
-            var items =
-                await _repository.GetByCustomerAsync(customerId);
-
-            return items.Select(Map).ToList();
-        }
-
-        public async Task<List<NotificationResponseDto>>
-            GetUnreadAsync(int customerId)
-        {
-            var items =
-                await _repository.GetUnreadByCustomerAsync(customerId);
-
-            return items.Select(Map).ToList();
-        }
-
-        public async Task<NotificationResponseDto> MarkAsReadAsync(
-            int id)
-        {
-            var notification =
-                await _repository.GetByIdAsync(id)
-                ?? throw new Exception("Notification not found");
-
-            if (!notification.IsRead)
-            {
-                notification.IsRead = true;
-                notification.ReadAt = DateTime.UtcNow;
-
-                await _repository.UpdateAsync(notification);
-            }
-
-            return Map(notification);
-        }
-
-        public async Task MarkAllAsReadAsync(int customerId)
-        {
-            var exists = await _context.Customers
-                .AnyAsync(x => x.Id == customerId);
-
-            if (!exists)
-                throw new Exception("Customer not found");
-
-            await _repository.MarkAllAsReadAsync(customerId);
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var notification =
-                await _repository.GetByIdAsync(id)
-                ?? throw new Exception("Notification not found");
-
-            await _repository.DeleteAsync(notification);
-        }
-
-        private static NotificationResponseDto Map(
-            Notification notification)
-        {
-            return new NotificationResponseDto
-            {
-                Id = notification.Id,
-                CustomerId = notification.CustomerId,
-                Type = notification.Type,
-                Title = notification.Title,
-                Message = notification.Message,
-                IsRead = notification.IsRead,
-                RelatedEntityType =
-                    notification.RelatedEntityType,
-                RelatedEntityId =
-                    notification.RelatedEntityId,
-                CreatedAt = notification.CreatedAt,
-                ReadAt = notification.ReadAt
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
             };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<NotificationDto>> GetCustomerNotificationsAsync(int customerId)
+        {
+            return await _context.Notifications
+                .Where(n => n.CustomerId == customerId)
+                .OrderByDescending(n => n.CreatedAt) // BRD Rule: Newest first
+                .Select(n => new NotificationDto
+                {
+                    Id = n.Id,
+                    CustomerId = n.CustomerId,
+                    Message = n.Message,
+                    IsRead = n.IsRead,
+                    CreatedAt = n.CreatedAt
+                }).ToListAsync();
+        }
+
+        public async Task MarkAsReadAsync(int notificationId, int customerId)
+        {
+            var notification = await _context.Notifications.FindAsync(notificationId);
+            if (notification == null) throw new Exception("Notification not found.");
+
+            // Security: Ensure the user owns this notification before modifying it
+            if (notification.CustomerId != customerId)
+                throw new Exception("Unauthorized access to notification.");
+
+            notification.IsRead = true;
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using EventParking.API.Interfaces;
+﻿using EventParking.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EventParking.API.DTOs.DashboardDTOs;
 
@@ -6,45 +7,28 @@ namespace EventParking.API.Controllers
 {
     [Route("api/dashboard")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")] // Strictly lock this down
     public class DashboardController : ControllerBase
     {
-        private readonly IDashboardService _dashboardService;
+        private readonly DashboardService _dashboardService;
 
-        public DashboardController(
-            IDashboardService dashboardService)
+        public DashboardController(DashboardService dashboardService)
         {
             _dashboardService = dashboardService;
         }
 
-        [HttpGet("admin")]
-        // [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<AdminDashboardDto>>
-            GetAdminDashboard()
-        {
-            var result =
-                await _dashboardService.GetAdminDashboardAsync();
-
-            return Ok(result);
-        }
-
-        [HttpGet("customer/{customerId:int}")]
-        // [Authorize]
-        public async Task<ActionResult<CustomerDashboardDto>>
-            GetCustomerDashboard(int customerId)
+        [HttpGet("metrics")]
+        public async Task<IActionResult> GetMetrics()
         {
             try
             {
-                var result = await _dashboardService
-                    .GetCustomerDashboardAsync(customerId);
-
-                return Ok(result);
+                var metrics = await _dashboardService.GetMetricsAsync();
+                return Ok(metrics);
             }
-            catch (KeyNotFoundException ex)
+            catch (Exception ex)
             {
-                return NotFound(new
-                {
-                    Message = ex.Message
-                });
+                return BadRequest(new { Message = ex.Message });
             }
         }
     }
