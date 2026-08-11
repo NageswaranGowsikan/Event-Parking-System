@@ -2,68 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Event & Parking Reservation</title>
+    <title>Login - Event & Parking</title>
+    <link rel="stylesheet" href="css/auth.css">
     
-    <!-- Google Fonts & Font Awesome Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Master Design System Stylesheet -->
-    <link rel="stylesheet" href="css/design-system.css">
 </head>
 <body>
-    
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
-                <a href="events.html" class="auth-brand-logo">
-                    <div class="brand-icon">
-                        <i class="fa-solid fa-ticket"></i>
-                    </div>
-                    EventTix
-                </a>
-                <h1 class="auth-title">Welcome Back</h1>
-                <p class="auth-subtitle">Enter your credentials to access your tickets and reservations</p>
-            </div>
-
-            <!-- Dynamic Alert Message -->
-            <div id="msg" class="message"></div>
-
-            <form id="loginForm" onsubmit="login(event)">
-                <div class="form-group">
-                    <label for="loginEmail" class="form-label">Email Address</label>
-                    <div class="form-input-wrapper">
-                        <input type="email" id="loginEmail" class="form-input" placeholder="name@example.com" required autocomplete="email">
-                        <i class="fa-regular fa-envelope"></i>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <label for="loginPassword" class="form-label" style="margin-bottom: 0;">Password</label>
-                        <a href="forgot-password.html" style="font-size: 0.82rem; color: var(--accent-cyan);">Forgot Password?</a>
-                    </div>
-                    <div class="form-input-wrapper">
-                        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
-                        <i class="fa-solid fa-lock"></i>
-                    </div>
-                </div>
-
-                <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
-                    <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                Don't have an account? <a href="register.html">Create an Account</a>
-            </div>
+    <div class="container">
+        <h2>Login</h2>
+        <div id="msg" class="message"></div>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email Address" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button onclick="login(event)">Login</button>
+        </form>
+        <div class="links">
+            <a href="register.html">Register</a> | 
+            <a href="forgot-password.html">Forgot Password?</a>
         </div>
     </div>
-
-    <!-- Core Logic & Auth Handler -->
     <script src="js/api.js"></script>
     <script src="js/auth/login.js"></script>
 </body>

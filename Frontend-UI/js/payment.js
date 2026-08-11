@@ -1,5 +1,3 @@
-// js/payment.js - Bulletproof Payment & Countdown Timer Logic
-
 let currentBookingId = null;
 let timerInterval = null;
 
@@ -7,22 +5,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     currentBookingId = urlParams.get('bookingId');
 
-    const refElem = document.getElementById('bookingRef');
-
     if (!currentBookingId) {
-        currentBookingId = "DEMO-BKG-" + Math.floor(100000 + Math.random() * 900000);
-        if (refElem) refElem.innerText = currentBookingId;
-        startCountdown(600);
+        document.querySelector('.payment-container').innerHTML = '<h3 style="color: red;">Invalid session.</h3>';
         return;
     }
 
-    if (refElem) refElem.innerText = currentBookingId;
-
     try {
+        // Fetch the hold status from the backend
         const statusData = await apiFetch(`/bookings/${currentBookingId}/hold-status`);
-        if (statusData && statusData.bookingNumber && refElem) {
-            refElem.innerText = statusData.bookingNumber;
-        }
+        
+        document.getElementById('bookingRef').innerText = statusData.bookingNumber;
 
         if (statusData.status !== "Pending" || statusData.remainingSeconds <= 0) {
             handleExpired();
@@ -30,16 +22,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             startCountdown(statusData.remainingSeconds);
         }
     } catch (error) {
-        console.warn("Backend hold status unfulfilled, starting 10-minute countdown timer:", error.message);
-        startCountdown(600);
+        alert("Error loading booking details: " + error.message);
     }
 });
 
 function startCountdown(totalSeconds) {
     let remaining = Math.floor(totalSeconds);
     const display = document.getElementById('countdownDisplay');
-
-    if (timerInterval) clearInterval(timerInterval);
 
     timerInterval = setInterval(() => {
         remaining--;
@@ -52,68 +41,46 @@ function startCountdown(totalSeconds) {
 
         const minutes = Math.floor(remaining / 60);
         const seconds = remaining % 60;
-        if (display) {
-            display.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        }
+        display.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }, 1000);
 }
 
 function handleExpired() {
     const box = document.getElementById('timerBox');
-    if (box) {
-        box.className = 'timer-box timer-expired';
-        box.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Hold period expired. Your seats have been released.';
-    }
+    box.className = 'timer-box timer-expired';
+    box.innerHTML = 'Hold period expired. Your seats have been released.';
     
-    const payBtn = document.getElementById('payBtn');
-    if (payBtn) {
-        payBtn.disabled = true;
-        payBtn.innerText = 'Booking Expired';
-    }
+    document.getElementById('payBtn').disabled = true;
+    document.getElementById('payBtn').innerText = 'Booking Expired';
 }
 
 async function submitPayment() {
-    const payBtn = document.getElementById('payBtn');
-    if (payBtn) {
-        payBtn.disabled = true;
-        payBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Processing Payment...`;
-    }
-
     try {
-        let receiptNumber = "REC-" + Math.floor(100000 + Math.random() * 900000);
-
-        if (typeof window.apiFetch === 'function' && currentBookingId && !currentBookingId.startsWith('DEMO')) {
-            const response = await apiFetch(`/bookings/${currentBookingId}/payment`, {
-                method: 'POST'
-            });
-            receiptNumber = response.receiptNumber || receiptNumber;
-        }
+        // Hit the NEW Module 7 Payment Endpoint
+        const response = await apiFetch(`/bookings/${currentBookingId}/payment`, {
+            method: 'POST'
+        });
         
-        if (timerInterval) clearInterval(timerInterval);
+        clearInterval(timerInterval); // Stop the expiration timer
         
-        alert(`Payment Authorized Successfully!\nReceipt Number: ${receiptNumber}\nYour tickets have been confirmed.`);
-        window.location.href = "customer-dashboard.html"; 
-
+        // Show the success message and receipt number
+        alert(`${response.message}\nReceipt Number: ${response.receiptNumber}`);
+        
+        // Optionally, you can redirect them to a receipt page or their dashboard
+        window.location.href = "events.html"; 
     } catch (error) {
         alert("Payment failed: " + error.message);
-        if (payBtn) {
-            payBtn.disabled = false;
-            payBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Confirm & Complete Order`;
-        }
     }
 }
 
 async function cancelBooking() {
-    if (!confirm("Are you sure you want to cancel and release your reserved seats?")) return;
+    if (!confirm("Are you sure you want to cancel and release your tickets?")) return;
     
     try {
-        if (currentBookingId && !currentBookingId.startsWith('DEMO')) {
-            await apiFetch(`/bookings/${currentBookingId}`, { method: 'DELETE' });
-        }
-        alert("Reservation cancelled successfully.");
+        await apiFetch(`/bookings/${currentBookingId}`, { method: 'DELETE' });
+        alert("Booking cancelled.");
         window.location.href = "events.html";
     } catch (error) {
         alert("Failed to cancel: " + error.message);
-        window.location.href = "events.html";
     }
 }

@@ -3,116 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parking Slots Allocation - Admin</title>
+    <title>Admin - Manage Parking</title>
     
-    <!-- Google Fonts & Font Awesome Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
     
-    <!-- Master Design System Stylesheet -->
-    <link rel="stylesheet" href="css/design-system.css">
-
     <style>
-        .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-        .admin-sidebar { background: rgba(9, 13, 22, 0.95); border-right: 1px solid var(--glass-border); padding: 24px 20px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; backdrop-filter: blur(20px); }
-        .admin-sidebar-menu { display: flex; flex-direction: column; gap: 8px; margin-top: 32px; }
-        .admin-nav-item { color: var(--text-secondary); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.92rem; font-weight: 600; display: flex; align-items: center; gap: 12px; transition: var(--transition-fast); }
-        .admin-nav-item:hover, .admin-nav-item.active { background: rgba(99, 102, 241, 0.15); color: var(--text-primary); border: 1px solid rgba(99, 102, 241, 0.3); }
-        .admin-nav-item.active { background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border-color: transparent; box-shadow: 0 4px 15px var(--primary-glow); }
-        .admin-content { padding: 40px; overflow-y: auto; }
-        .table-responsive { overflow-x: auto; width: 100%; margin-top: 16px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: rgba(9, 13, 22, 0.6); color: var(--text-secondary); padding: 14px 18px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--glass-border); }
-        td { padding: 16px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.92rem; color: var(--text-primary); vertical-align: middle; }
-        tr:hover td { background: rgba(255, 255, 255, 0.03); }
-        select.form-input option { background: var(--bg-surface-elevated); color: var(--text-primary); }
-        @media (max-width: 992px) { .admin-layout { grid-template-columns: 1fr; } .admin-sidebar { height: auto; position: relative; } }
+        /* Global Styles & Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --success-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --dark: #1e293b;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        #logoutBtn {
+            background: transparent;
+            color: #f87171;
+            border: 1px solid #f87171;
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #logoutBtn:hover {
+            background: #f87171;
+            color: white;
+        }
+
+        /* Layout & Cards */
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .page-header {
+            margin-bottom: 10px;
+        }
+
+        .page-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+
+        .page-header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        /* Forms & Inputs */
+        .form-group-flex {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            min-width: 160px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        input, select {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Buttons */
+        .btn-success {
+            padding: 12px 24px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 46px; /* Match input height */
+            width: 100%;
+            white-space: nowrap;
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 14px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f5f9;
+        }
     </style>
 </head>
 <body>
+    
+    <nav class="navbar">
+        <h2><i class="fa-solid fa-calendar-check"></i> EventAdmin</h2>
+        <div class="nav-right">
+              <a href="admin-dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+    
+    <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
+    <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
+    <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
+    <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
+    <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
+    <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        
+        <div class="page-header">
+            <h2>Parking Layout Manager</h2>
+            <p>Select an event to generate its parking zones or manage existing unreserved slots.</p>
+        </div>
 
-    <div class="admin-layout">
-        <!-- SIDEBAR DRAWER -->
-        <aside class="admin-sidebar">
-            <a href="admin-dashboard.html" class="brand-logo" style="padding-left: 8px;">
-                <div class="brand-icon"><i class="fa-solid fa-cube"></i></div> EventAdmin
-            </a>
-            <nav class="admin-sidebar-menu">
-                <a href="admin-dashboard.html" class="admin-nav-item"><i class="fa-solid fa-chart-line"></i> System Dashboard</a>
-                <a href="admin-venues.html" class="admin-nav-item"><i class="fa-solid fa-building"></i> Venues Setup</a>
-                <a href="admin-events.html" class="admin-nav-item"><i class="fa-solid fa-calendar-plus"></i> Events Setup</a>
-                <a href="admin-seats.html" class="admin-nav-item"><i class="fa-solid fa-chair"></i> Seat Allocation</a>
-                <a href="admin-parking.html" class="admin-nav-item active"><i class="fa-solid fa-square-parking"></i> Parking Slots</a>
-                <a href="admin-customers.html" class="admin-nav-item"><i class="fa-solid fa-users"></i> Users & Customers</a>
-            </nav>
-            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--glass-border);">
-                <button onclick="logout()" class="btn btn-danger" style="width: 100%; justify-content: flex-start;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</button>
+        <!-- Target Event Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-crosshairs" style="color: var(--primary);"></i>
+                <h3>1. Select Target Event</h3>
             </div>
-        </aside>
-
-        <!-- MAIN CONTENT -->
-        <main class="admin-content">
-            <div class="glass-panel" style="padding: 32px; margin-bottom: 32px;">
-                <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px;">Parking Slots & Zones Configuration</h1>
-                <p style="color: var(--text-secondary); margin: 0;">Allocate parking bays by zone and configure custom event parking fees</p>
+            
+            <div class="input-wrapper" style="max-width: 100%;">
+                <select id="eventSelect" onchange="loadParkingSlots()">
+                    <option value="">Loading events...</option>
+                </select>
             </div>
+        </div>
 
-            <!-- GENERATION FORM -->
-            <div class="glass-panel" style="padding: 28px; margin-bottom: 32px;">
-                <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-car" style="color: var(--accent-cyan);"></i> Generate Parking Bays
-                </h2>
-
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label class="form-label">Target Event</label>
-                    <select id="eventSelect" class="form-input" onchange="loadParkingSlots()" style="padding-left:16px;">
-                        <option value="">-- Choose an Event --</option>
-                    </select>
+        <!-- Generation Tool Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-car-side" style="color: var(--success);"></i>
+                <h3>2. Mass-Generate Parking Zone</h3>
+            </div>
+            
+            <div class="form-group-flex">
+                <div class="input-wrapper">
+                    <label>Zone Name</label>
+                    <input type="text" id="zoneInput" placeholder="e.g., VIP, General, North">
                 </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
-                    <div class="form-group" style="margin:0;">
-                        <label class="form-label">Zone Name (e.g. A, VIP)</label>
-                        <input type="text" id="zoneInput" class="form-input" placeholder="A" style="padding-left:16px;">
-                    </div>
-                    <div class="form-group" style="margin:0;">
-                        <label class="form-label">Start Slot Number</label>
-                        <input type="number" id="startSlot" class="form-input" placeholder="1" style="padding-left:16px;">
-                    </div>
-                    <div class="form-group" style="margin:0;">
-                        <label class="form-label">End Slot Number</label>
-                        <input type="number" id="endSlot" class="form-input" placeholder="50" style="padding-left:16px;">
-                    </div>
-                    <div class="form-group" style="margin:0;">
-                        <label class="form-label">Slot Fee ($)</label>
-                        <input type="number" step="0.01" id="feeInput" class="form-input" placeholder="25.00" style="padding-left:16px;">
-                    </div>
+                
+                <div class="input-wrapper" style="min-width: 120px;">
+                    <label>Start Slot #</label>
+                    <input type="number" id="startSlot" placeholder="1">
                 </div>
-
-                <button onclick="generateParkingSlots()" class="btn btn-accent-cyan"><i class="fa-solid fa-square-plus"></i> Generate Parking Bays</button>
-            </div>
-
-            <!-- PARKING TABLE -->
-            <div class="glass-panel" style="padding: 28px;">
-                <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 20px;">Current Parking Slot Inventory</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>Zone</th><th>Slot #</th><th>Fee</th><th>Status</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="parkingTableBody">
-                            <tr><td colspan="5" style="text-align: center;">Select an event above.</td></tr>
-                        </tbody>
-                    </table>
+                
+                <div class="input-wrapper" style="min-width: 120px;">
+                    <label>End Slot #</label>
+                    <input type="number" id="endSlot" placeholder="50">
+                </div>
+                
+                <div class="input-wrapper" style="min-width: 120px;">
+                    <label>Fee ($)</label>
+                    <input type="number" id="feeInput" placeholder="25.00">
+                </div>
+                
+                <div class="input-wrapper">
+                    <button class="btn-success" onclick="generateParkingSlots()">
+                        <i class="fa-solid fa-layer-group"></i> Generate Slots
+                    </button>
                 </div>
             </div>
+        </div>
 
-        </main>
+        <!-- Current Map Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-map-location-dot" style="color: var(--text-muted);"></i>
+                <h3>3. Current Parking Layout</h3>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Zone</th>
+                            <th>Slot Number</th>
+                            <th>Fee</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parkingTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <i class="fa-solid fa-arrow-pointer" style="display: block; font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                                Select an event above to view its parking layout.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
     </div>
 
-    <!-- Core Logic & API Integration -->
     <script src="js/api.js"></script>
     <script src="js/auth/admin-parking.js"></script>
 </body>
