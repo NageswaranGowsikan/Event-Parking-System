@@ -2,120 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Event & Parking Reservation</title>
-    
-    <!-- Google Fonts & Font Awesome Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Master Design System Stylesheet -->
-    <link rel="stylesheet" href="css/design-system.css">
-
-    <style>
-        .profile-container {
-            max-width: 680px;
-            margin: 40px auto 80px auto;
-            padding: 0 20px;
-        }
-
-        .profile-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .profile-avatar-large {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--primary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-            color: white;
-            margin: 0 auto 16px auto;
-            box-shadow: 0 0 25px var(--accent-cyan-glow);
-        }
-    </style>
+    <title>My Profile</title>
+    <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
-
-    <!-- STICKY GLASS TOP NAVIGATION -->
-    <nav class="glass-navbar">
-        <a href="events.html" class="brand-logo">
-            <div class="brand-icon">
-                <i class="fa-solid fa-ticket"></i>
-            </div>
-            EventTix
-        </a>
-
-        <div class="nav-menu">
-            <a href="events.html" class="nav-link">
-                <i class="fa-solid fa-compass"></i> Browse Events
-            </a>
-            <a href="customer-dashboard.html" class="nav-link">
-                <i class="fa-solid fa-id-card"></i> My Dashboard
-            </a>
-            <a href="profile.html" class="nav-link active">
-                <i class="fa-solid fa-user-gear"></i> My Profile
-            </a>
-        </div>
-    </nav>
-
-    <!-- MAIN PROFILE FORM -->
-    <div class="profile-container">
-        <div class="glass-panel" style="padding: 40px;">
-            <div class="profile-header">
-                <div class="profile-avatar-large">
-                    <i class="fa-regular fa-user"></i>
-                </div>
-                <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px;">Account Profile</h1>
-                <p style="color: var(--text-secondary); font-size: 0.92rem;">Update your personal details and contact information</p>
-            </div>
-
-            <!-- Dynamic Alert Message -->
-            <div id="msg" class="message"></div>
-
-            <form id="profileForm">
-                <div class="form-group">
-                    <label for="name" class="form-label">Full Name</label>
-                    <div class="form-input-wrapper">
-                        <input type="text" id="name" class="form-input" placeholder="Your Name" required>
-                        <i class="fa-regular fa-user"></i>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="email" class="form-label">Email Address (Read-Only)</label>
-                    <div class="form-input-wrapper">
-                        <input type="email" id="email" class="form-input" readonly style="opacity: 0.7; cursor: not-allowed;">
-                        <i class="fa-regular fa-envelope"></i>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone" class="form-label">Phone Number</label>
-                    <div class="form-input-wrapper">
-                        <input type="tel" id="phone" class="form-input" placeholder="+1 (555) 000-0000" required>
-                        <i class="fa-solid fa-phone"></i>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
-                    <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
-                </button>
-
-                <button type="button" id="logoutBtn" class="btn btn-secondary" style="width: 100%; padding: 12px; margin-top: 12px;">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out of Account
-                </button>
-            </form>
+    <div class="container">
+        <h2>My Profile</h2>
+        <div id="msg" class="message"></div>
+        <form id="profileForm">
+            <label>Name</label>
+            <input type="text" id="name" required>
+            
+            <label>Phone</label>
+            <input type="tel" id="phone" required>
+            
+            <label>Email (Cannot be changed)</label>
+            <input type="email" id="email" disabled>
+            
+            <button type="submit">Update Profile</button>
+        </form>
+        <div class="links">
+            <a href="#" id="logoutBtn">Logout</a>
         </div>
     </div>
-
-    <!-- Core Logic & API Integration -->
     <script src="js/api.js"></script>
     <script src="js/auth/profile.js"></script>
 </body>
