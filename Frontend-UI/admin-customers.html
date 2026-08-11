@@ -3,261 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Management - Admin</title>
+    <title>Customer Account Management - Admin</title>
     
-    <!-- Modern Font & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/admin.css">
     
+    <!-- Master Design System Stylesheet -->
+    <link rel="stylesheet" href="css/design-system.css">
+
     <style>
-        /* Global Styles & Variables */
-        :root {
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --success: #10b981;
-            --danger: #ef4444;
-            --dark: #1e293b;
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #334155;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            color: var(--text-main);
-        }
-
-        /* Navigation Bar (Matches Dashboard) */
-        .navbar {
-            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
-            color: white;
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .navbar h2 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .nav-link {
-            color: #cbd5e1;
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: color 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .nav-link:hover {
-            color: white;
-        }
-
-        #logoutBtn {
-            background: transparent;
-            color: #f87171;
-            border: 1px solid #f87171;
-            padding: 7px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        #logoutBtn:hover {
-            background: #f87171;
-            color: white;
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .header-section {
-            margin-bottom: 25px;
-        }
-
-        .header-section h2 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: var(--dark);
-        }
-
-        /* Search Bar Area */
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .search-bar {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        #searchInput {
-            flex-grow: 1;
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        #searchInput:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        #searchBtn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #searchBtn:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Table Styling */
-        .table-container {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        .data-table th {
-            background: #f8fafc;
-            padding: 16px 20px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .data-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-size: 0.95rem;
-        }
-
-        .data-table tbody tr {
-            transition: background 0.2s ease;
-        }
-
-        .data-table tbody tr:hover {
-            background-color: #f1f5f9;
-        }
-
-        /* Message Box */
-        #msg {
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
+        .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+        .admin-sidebar { background: rgba(9, 13, 22, 0.95); border-right: 1px solid var(--glass-border); padding: 24px 20px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; backdrop-filter: blur(20px); }
+        .admin-sidebar-menu { display: flex; flex-direction: column; gap: 8px; margin-top: 32px; }
+        .admin-nav-item { color: var(--text-secondary); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.92rem; font-weight: 600; display: flex; align-items: center; gap: 12px; transition: var(--transition-fast); }
+        .admin-nav-item:hover, .admin-nav-item.active { background: rgba(99, 102, 241, 0.15); color: var(--text-primary); border: 1px solid rgba(99, 102, 241, 0.3); }
+        .admin-nav-item.active { background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border-color: transparent; box-shadow: 0 4px 15px var(--primary-glow); }
+        .admin-content { padding: 40px; overflow-y: auto; }
+        .table-responsive { overflow-x: auto; width: 100%; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: rgba(9, 13, 22, 0.6); color: var(--text-secondary); padding: 14px 18px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--glass-border); }
+        td { padding: 16px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.92rem; color: var(--text-primary); vertical-align: middle; }
+        tr:hover td { background: rgba(255, 255, 255, 0.03); }
+        .btn-success { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+        .btn-success:hover { background: var(--accent-emerald); color: white; }
+        @media (max-width: 992px) { .admin-layout { grid-template-columns: 1fr; } .admin-sidebar { height: auto; position: relative; } }
     </style>
 </head>
 <body>
-    
-    <nav class="navbar">
-        <h2><i class="fa-solid fa-calendar-check"></i> EventAdmin</h2>
-        <div class="nav-right">
-                        <a href="admin-dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
-    <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
-    <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
-    <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
-    <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
-    <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
-    <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
-        </div>
-    </nav>
-    
-    <div class="container">
-        <div class="header-section">
-            <h2>Customer Management</h2>
-        </div>
-        
-        <div class="toolbar">
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Search by name, email, or ID...">
-                <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+
+    <div class="admin-layout">
+        <!-- SIDEBAR DRAWER -->
+        <aside class="admin-sidebar">
+            <a href="admin-dashboard.html" class="brand-logo" style="padding-left: 8px;">
+                <div class="brand-icon"><i class="fa-solid fa-cube"></i></div> EventAdmin
+            </a>
+            <nav class="admin-sidebar-menu">
+                <a href="admin-dashboard.html" class="admin-nav-item"><i class="fa-solid fa-chart-line"></i> System Dashboard</a>
+                <a href="admin-venues.html" class="admin-nav-item"><i class="fa-solid fa-building"></i> Venues Setup</a>
+                <a href="admin-events.html" class="admin-nav-item"><i class="fa-solid fa-calendar-plus"></i> Events Setup</a>
+                <a href="admin-seats.html" class="admin-nav-item"><i class="fa-solid fa-chair"></i> Seat Allocation</a>
+                <a href="admin-parking.html" class="admin-nav-item"><i class="fa-solid fa-square-parking"></i> Parking Slots</a>
+                <a href="admin-customers.html" class="admin-nav-item active"><i class="fa-solid fa-users"></i> Users & Customers</a>
+            </nav>
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%; justify-content: flex-start;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</button>
             </div>
-        </div>
+        </aside>
 
-        <div id="msg" style="display: none; padding: 12px 16px; margin-bottom: 20px; border-radius: 6px;"></div>
+        <!-- MAIN CONTENT -->
+        <main class="admin-content">
+            <div class="glass-panel" style="padding: 32px; margin-bottom: 32px;">
+                <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px;">Customer Account Management</h1>
+                <p style="color: var(--text-secondary); margin: 0;">Search customer directory, monitor account status, and deactivate/reactivate user access</p>
+            </div>
 
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customerTableBody">
-                    <!-- Data will be populated here by JavaScript -->
-                </tbody>
-            </table>
-        </div>
+            <div id="msg" class="message"></div>
+
+            <!-- SEARCH TOOLBAR & USER TABLE -->
+            <div class="glass-panel" style="padding: 28px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+                    <div class="form-input-wrapper" style="flex-grow: 1;">
+                        <input type="text" id="searchInput" class="form-input" placeholder="Search by customer name, email, or phone number...">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <button id="searchBtn" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>User ID</th><th>Full Name</th><th>Email Address</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="customerTableBody">
+                            <tr><td colspan="6" style="text-align: center;">Loading registered customers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
     </div>
 
+    <!-- Core Logic & API Integration -->
     <script src="js/api.js"></script>
     <script src="js/auth/admin-customers.js"></script>
 </body>
