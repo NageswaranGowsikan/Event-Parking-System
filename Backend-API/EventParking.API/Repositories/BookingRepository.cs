@@ -16,6 +16,7 @@ namespace EventParking.API.Repositories
 
         public async Task<Booking?> GetByIdAsync(int id) =>
             await _context.Bookings
+                .Include(b => b.Customer)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
         public async Task<Booking?> GetByReferenceAsync(string bookingReference) =>
