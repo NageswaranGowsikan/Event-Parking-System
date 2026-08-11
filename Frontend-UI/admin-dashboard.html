@@ -3,25 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Enterprise Admin Dashboard</title>
     
     <!-- Modern Font & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/admin.css">
     
     <style>
-        /* Global Styles */
+        /* Modern Enterprise Variables */
         :root {
-            --primary: #3b82f6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --info: #06b6d4;
-            --dark: #1e293b;
-            --bg-color: #f3f4f6;
+            --primary: #000000;
+            --primary-hover: #333333;
+            
+            /* Status Colors */
+            --revenue: #059669;    /* Emerald */
+            --revenue-bg: #d1fae5;
+            --events: #2563eb;     /* Blue */
+            --events-bg: #dbeafe;
+            --bookings: #4f46e5;   /* Indigo */
+            --bookings-bg: #e0e7ff;
+            --seats: #0891b2;      /* Cyan */
+            --seats-bg: #cffafe;
+            --parking: #d97706;    /* Amber */
+            --parking-bg: #fef3c7;
+            --customers: #7c3aed;  /* Violet */
+            --customers-bg: #ede9fe;
+
+            /* Base Colors */
+            --bg-color: #fafafa;
             --card-bg: #ffffff;
-            --text-main: #334155;
-            --text-muted: #64748b;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
         }
 
         body {
@@ -29,178 +42,197 @@
             background-color: var(--bg-color);
             margin: 0;
             color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Navigation Bar */
+        /* Clean, Bordered Navigation */
         .navbar {
-            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
-            color: white;
-            padding: 15px 40px;
+            background: var(--card-bg);
+            padding: 16px 48px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .navbar-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             margin: 0;
             font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .navbar-brand i {
+            color: var(--text-main);
         }
 
         .nav-links {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
 
         .nav-links a {
-            color: #cbd5e1;
+            color: var(--text-muted);
             text-decoration: none;
-            padding: 8px 12px;
+            padding: 8px 14px;
             border-radius: 6px;
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 500;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
-        .nav-links a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
+        .nav-links a:hover, .nav-links a.active {
+            background-color: #f3f4f6;
+            color: var(--text-main);
         }
 
         .btn-logout {
-            background: transparent;
-            color: #f87171;
-            border: 1px solid #f87171;
-            padding: 7px 16px;
+            background: white;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s ease;
-            margin-left: 15px;
+            margin-left: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-logout:hover {
-            background: #f87171;
-            color: white;
+            background: #fef2f2;
+            border-color: #ef4444;
         }
 
         /* Dashboard Container */
         .dashboard-container {
             max-width: 1280px;
-            margin: 40px auto;
-            padding: 0 20px;
+            margin: 48px auto;
+            padding: 0 24px;
         }
 
         .dashboard-header {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .dashboard-header h2 {
-            margin: 0 0 5px 0;
-            font-size: 1.8rem;
-            color: var(--dark);
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
         }
 
         .dashboard-header p {
             margin: 0;
             color: var(--text-muted);
+            font-size: 1.05rem;
         }
 
-        /* Metrics Grid */
+        /* Minimalist Metrics Grid */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
-            margin-top: 20px;
+            animation: fadeIn 0.5s ease-out;
         }
         
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .metric-card {
             background: var(--card-bg);
-            padding: 25px;
+            padding: 24px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-            border-top: 4px solid var(--primary);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
             display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            align-items: center;
+            gap: 20px;
         }
 
         .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border-color: #d1d5db;
         }
 
-        .card-header {
+        /* Accent Icon Boxes */
+        .icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 15px;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .metric-card h3 {
             margin: 0;
             color: var(--text-muted);
             font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             font-weight: 600;
-        }
-
-        .metric-card i {
-            font-size: 1.5rem;
-            color: var(--primary);
-            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .metric-card p {
             margin: 0;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--dark);
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
         }
 
         /* Specific Card Colors */
-        .card-revenue { border-top-color: var(--success); }
-        .card-revenue i { color: var(--success); }
-        .card-revenue p { color: var(--success); }
+        .card-revenue .icon-box { background: var(--revenue-bg); color: var(--revenue); }
+        .card-events .icon-box { background: var(--events-bg); color: var(--events); }
+        .card-bookings .icon-box { background: var(--bookings-bg); color: var(--bookings); }
+        .card-seats .icon-box { background: var(--seats-bg); color: var(--seats); }
+        .card-parking .icon-box { background: var(--parking-bg); color: var(--parking); }
+        .card-customers .icon-box { background: var(--customers-bg); color: var(--customers); }
 
-        .card-parking { border-top-color: var(--warning); }
-        .card-parking i { color: var(--warning); }
-
-        .card-seats { border-top-color: var(--info); }
-        .card-seats i { color: var(--info); }
-
-        .card-customers { border-top-color: #8b5cf6; }
-        .card-customers i { color: #8b5cf6; }
-
-        /* Loading Spinner */
+        /* Elegant Loader */
         .loader-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 15px;
-            padding: 40px;
-            justify-content: center;
+            gap: 16px;
+            padding: 60px 20px;
             color: var(--text-muted);
         }
 
         .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(59, 130, 246, 0.2);
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e5e7eb;
             border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
+            border-top-color: var(--text-main);
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
@@ -209,8 +241,9 @@
 
         /* Responsive */
         @media (max-width: 992px) {
-            .navbar { flex-direction: column; gap: 15px; padding: 15px; }
+            .navbar { flex-direction: column; gap: 20px; padding: 20px; }
             .nav-links { flex-wrap: wrap; justify-content: center; }
+            .btn-logout { margin-left: 0; margin-top: 10px; }
         }
     </style>
 </head>
@@ -218,16 +251,19 @@
     
     <nav class="navbar">
         <h2 class="navbar-brand">
-            <i class="fa-solid fa-calendar-check"></i> EventAdmin
+            <i class="fa-solid fa-cube"></i> EventAdmin
         </h2>
         <div class="nav-links">
-            <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
-            <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
-            <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
-            <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
-            <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
-            <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
-        </div>
+    <!-- Add this new Dashboard link right here -->
+    <a href="admin-dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+    
+    <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
+    <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
+    <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
+    <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
+    <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
+    <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+   </div>
     </nav>
     
     <div class="dashboard-container">
@@ -239,57 +275,70 @@
         <!-- Upgraded Loading Animation -->
         <div id="loadingMessage" class="loader-container">
             <div class="spinner"></div>
-            <h3>Loading latest metrics...</h3>
+            <h3 style="margin: 0; font-weight: 500; font-size: 1rem;">Loading latest metrics...</h3>
         </div>
 
-        <div class="metrics-grid" id="metricsGrid" style="display: none;">
+        <!-- Note: Removed style="display: none;" for preview purposes. Add it back when integrating with your JS! -->
+        <div class="metrics-grid" id="metricsGrid">
             
             <div class="metric-card card-revenue">
-                <div class="card-header">
-                    <h3>Total Revenue</h3>
+                <div class="icon-box">
                     <i class="fa-solid fa-sack-dollar"></i>
                 </div>
-                <p>$<span id="metricRevenue">0.00</span></p>
+                <div class="card-info">
+                    <h3>Total Revenue</h3>
+                    <p>$<span id="metricRevenue">12,450.00</span></p>
+                </div>
             </div>
             
-            <div class="metric-card">
-                <div class="card-header">
-                    <h3>Total Events</h3>
+            <div class="metric-card card-events">
+                <div class="icon-box">
                     <i class="fa-solid fa-calendar-days"></i>
                 </div>
-                <p id="metricEvents">0</p>
+                <div class="card-info">
+                    <h3>Total Events</h3>
+                    <p id="metricEvents">24</p>
+                </div>
             </div>
             
-            <div class="metric-card">
-                <div class="card-header">
-                    <h3>Total Bookings</h3>
+            <div class="metric-card card-bookings">
+                <div class="icon-box">
                     <i class="fa-solid fa-receipt"></i>
                 </div>
-                <p id="metricBookings">0</p>
+                <div class="card-info">
+                    <h3>Total Bookings</h3>
+                    <p id="metricBookings">892</p>
+                </div>
             </div>
             
             <div class="metric-card card-seats">
-                <div class="card-header">
-                    <h3>Available Seats</h3>
+                <div class="icon-box">
                     <i class="fa-solid fa-couch"></i>
                 </div>
-                <p id="metricSeats">0</p>
+                <div class="card-info">
+                    <h3>Available Seats</h3>
+                    <p id="metricSeats">4,105</p>
+                </div>
             </div>
             
             <div class="metric-card card-parking">
-                <div class="card-header">
-                    <h3>Occupied Parking</h3>
+                <div class="icon-box">
                     <i class="fa-solid fa-car"></i>
                 </div>
-                <p id="metricParking">0</p>
+                <div class="card-info">
+                    <h3>Occupied Parking</h3>
+                    <p id="metricParking">156</p>
+                </div>
             </div>
             
             <div class="metric-card card-customers">
-                <div class="card-header">
-                    <h3>Total Customers</h3>
+                <div class="icon-box">
                     <i class="fa-solid fa-user-group"></i>
                 </div>
-                <p id="metricCustomers">0</p>
+                <div class="card-info">
+                    <h3>Total Customers</h3>
+                    <p id="metricCustomers">3,240</p>
+                </div>
             </div>
             
         </div>
