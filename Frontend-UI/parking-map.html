@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserved Parking - Event & Parking Reservation</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Master Design System Stylesheet -->
+    <link rel="stylesheet" href="css/design-system.css">
+
+    <style>
+        .parking-layout-wrapper {
+            max-width: 1200px;
+            margin: 30px auto 60px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .parking-arena {
+            padding: 36px 28px;
+            text-align: center;
+        }
+
+        /* Parking Bay Grid */
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .slot {
+            background: rgba(30, 41, 59, 0.7);
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 20px 14px;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slot:hover:not(.occupied) {
+            transform: translateY(-4px) scale(1.04);
+            background: rgba(51, 65, 85, 0.9);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px var(--accent-cyan-glow);
+        }
+
+        .slot.selected {
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            border-style: solid;
+            border-color: #38bdf8;
+            box-shadow: 0 0 25px var(--accent-cyan-glow);
+            transform: translateY(-3px);
+        }
+
+        .slot.selected .slot-name, .slot.selected .slot-fee {
+            color: #0f172a;
+            font-weight: 800;
+        }
+
+        .slot.occupied {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: rgba(255, 255, 255, 0.05);
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .slot-name {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+
+        .slot-fee {
+            font-size: 0.85rem;
+            color: var(--accent-emerald);
+            font-weight: 600;
+        }
+
+        .slot.occupied .slot-fee {
+            color: var(--text-muted);
+        }
+
+        .checkout-drawer {
+            position: sticky;
+            top: 100px;
+            padding: 28px;
+        }
+
+        @media (max-width: 900px) {
+            .parking-layout-wrapper { grid-template-columns: 1fr; }
+            .checkout-drawer { position: sticky; bottom: 20px; top: auto; z-index: 100; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP GLASS NAVIGATION -->
+    <nav class="glass-navbar">
+        <a href="events.html" class="brand-logo">
+            <div class="brand-icon">
+                <i class="fa-solid fa-square-parking"></i>
+            </div>
+            EventTix
+        </a>
+
+        <div class="nav-menu">
+            <button onclick="skipParking()" class="btn btn-secondary">
+                Skip Parking <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN PARKING LAYOUT -->
+    <div class="parking-layout-wrapper">
+
+        <!-- PARKING SLOTS DISPLAY -->
+        <main class="glass-panel parking-arena">
+            <div style="margin-bottom: 24px;">
+                <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px;">Select Reserved Parking Bay</h1>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Choose a parking spot close to the main venue entrance</p>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="errorMsg" class="message error"></div>
+
+            <!-- Showcase Legend -->
+            <ul class="showcase-legend" style="margin-bottom: 28px;">
+                <li><div class="legend-sample-seat legend-available"></div> Available Spot</li>
+                <li><div class="legend-sample-seat legend-selected"></div> Selected Bay</li>
+                <li><div class="legend-sample-seat legend-booked"></div> Occupied / Reserved</li>
+            </ul>
+
+            <!-- Dynamic Parking Slots Grid -->
+            <div id="parkingLayout" class="parking-grid">
+                <div style="grid-column: 1 / -1; padding: 40px; color: var(--text-secondary);">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px;"></i>
+                    <p>Loading parking zones and bay availability...</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- STICKY CHECKOUT DRAWER -->
+        <aside class="glass-panel checkout-drawer">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-car" style="color: var(--accent-cyan);"></i> Parking Summary
+            </h2>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 14px; color: var(--text-secondary);">
+                <span>Selected Spot:</span>
+                <strong id="selectedSpotText" style="color: var(--text-primary);">None</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-secondary);">
+                <span>Parking Fee:</span>
+                <strong id="selectedFeeText" style="color: var(--accent-emerald); font-size: 1.2rem;">$0.00</strong>
+            </div>
+
+            <button id="confirmBtn" class="btn btn-accent-cyan" style="width: 100%; padding: 14px; margin-bottom: 12px;" disabled onclick="addParking()">
+                <i class="fa-solid fa-circle-check"></i> Add Parking & Continue
+            </button>
+
+            <button onclick="skipParking()" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 0.9rem;">
+                Proceed Without Parking
+            </button>
+        </aside>
+
+    </div>
+
+    <!-- Core Logic & API Integration -->
+    <script src="js/api.js"></script>
+    <script src="js/parking-map.js"></script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Events - Event & Parking Reservation</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Master Design System Stylesheet -->
+    <link rel="stylesheet" href="css/design-system.css">
+    
+    <style>
+        /* Page Specific Overrides */
+        .hero-banner {
+            position: relative;
+            padding: 80px 20px 100px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 500px;
+            background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.25) 0%, rgba(6, 182, 212, 0.1) 45%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-title {
+            font-size: 3.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 620px;
+            margin: 0 auto 40px auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Floating Glass Search Toolbar */
+        .search-container {
+            max-width: 860px;
+            margin: -60px auto 40px auto;
+            padding: 16px 20px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-input-box {
+            flex-grow: 1;
+        }
+
+        /* Category Filter Pills Bar */
+        .category-filter-bar {
+            max-width: 1280px;
+            margin: 0 auto 36px auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .category-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 8px 18px;
+            border-radius: var(--radius-full);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-pill:hover, .category-pill.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        /* Main Grid Wrapper */
+        .main-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px 80px 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--accent-cyan);
+        }
+
+        .loading-state-wrapper {
+            grid-column: 1 / -1;
+            padding: 80px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .spinner-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .search-container { flex-direction: column; margin-top: -30px; }
+            .search-input-box { width: 100%; }
+            .search-container button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- STICKY GLASS TOP NAVIGATION -->
+    <nav class="glass-navbar">
+        <a href="events.html" class="brand-logo">
+            <div class="brand-icon">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+            EventTix
+        </a>
+
+        <div id="navLinks" class="nav-menu">
+            <a href="events.html" class="nav-link active">
+                <i class="fa-solid fa-compass"></i> Browse Events
+            </a>
+            <a href="customer-dashboard.html" class="nav-link">
+                <i class="fa-solid fa-id-card"></i> My Dashboard
+            </a>
+            <a href="notifications.html" class="nav-link">
+                <i class="fa-regular fa-bell"></i> Notifications
+                <span class="notification-badge">3</span>
+            </a>
+            <div class="user-pill">
+                <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+                <button onclick="logout()" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.82rem;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- HERO BANNER SECTION -->
+    <header class="hero-banner">
+        <h1 class="hero-title">Experience Unforgettable Live Events</h1>
+        <p class="hero-subtitle">Book premium seating and reserved parking for upcoming concerts, sports, theater, and festivals with instant digital ticketing.</p>
+    </header>
+    
+    <!-- FLOATING SEARCH TOOLBAR -->
+    <div class="search-container glass-panel">
+        <div class="search-input-wrapper search-input-box">
+            <input type="text" id="searchInput" class="form-input" placeholder="Search events by title, artist, or venue..." onkeyup="if(event.key==='Enter') applyFilters()">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <button class="btn btn-primary" onclick="applyFilters()">
+            <i class="fa-solid fa-magnifying-glass"></i> Search
+        </button>
+        <button class="btn btn-secondary" onclick="clearCategoryAndSearch()">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+    </div>
+
+    <!-- CATEGORY FILTER PILL TAGS -->
+    <div class="category-filter-bar" id="categoryPillBar">
+        <button class="category-pill active" onclick="filterByCategory('', this)">
+            <i class="fa-solid fa-layer-group"></i> All Events
+        </button>
+        <button class="category-pill" onclick="filterByCategory('Concert', this)">
+            <i class="fa-solid fa-music"></i> Concerts
+        </button>
+        <button class="category-pill" onclick="filterByCategory('Sports', this)">
+            <i class="fa-solid fa-trophy"></i> Sports
+        </button>
+        <button class="category-pill" onclick="filterByCategory('Theater', this)">
+            <i class="fa-solid fa-masks-theater"></i> Theater
+        </button>
+        <button class="category-pill" onclick="filterByCategory('Conference', this)">
+            <i class="fa-solid fa-microphone"></i> Conferences
+        </button>
+        <button class="category-pill" onclick="filterByCategory('Festival', this)">
+            <i class="fa-solid fa-champagne-glasses"></i> Festivals
+        </button>
+    </div>
+
+    <!-- MAIN EVENT DISCOVERY GRID -->
+    <main class="main-container">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fa-solid fa-fire-flame-curved"></i> Featured Upcoming Events
+            </h2>
+        </div>
+
+        <div id="eventsContainer" class="events-grid">
+            <div class="loading-state-wrapper">
+                <i class="fa-solid fa-circle-notch spinner-icon"></i>
+                <h3 style="font-weight: 600; margin-bottom: 6px;">Fetching Upcoming Events...</h3>
+                <p style="font-size: 0.9rem;">Connecting to real-time reservation system</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Core Logic & API Integration -->
+    <script src="js/api.js"></script>
+    <script src="js/events.js"></script>
+    <script>
+        // Additional Helper for Category Pill Interactivity
+        function filterByCategory(categoryName, pillElement) {
+            document.querySelectorAll('.category-pill').forEach(el => el.classList.remove('active'));
+            if (pillElement) pillElement.classList.add('active');
+            
+            const searchInput = document.getElementById('searchInput');
+            if (categoryName) {
+                searchInput.value = categoryName;
+            } else {
+                searchInput.value = '';
+            }
+            loadEvents(categoryName);
+        }
+
+        function clearCategoryAndSearch() {
+            document.querySelectorAll('.category-pill').forEach(el => el.classList.remove('active'));
+            const firstPill = document.querySelector('.category-pill');
+            if (firstPill) firstPill.classList.add('active');
+            clearFilters();
+        }
+    </script>
+</body>
+</html>

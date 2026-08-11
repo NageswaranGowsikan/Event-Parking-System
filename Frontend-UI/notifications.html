@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Event & Parking Reservation</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Master Design System Stylesheet -->
+    <link rel="stylesheet" href="css/design-system.css">
+
+    <style>
+        .notifications-container {
+            max-width: 900px;
+            margin: 40px auto 80px auto;
+            padding: 0 20px;
+        }
+
+        .notification-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            transition: var(--transition-fast);
+        }
+
+        .notification-card.unread {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(99, 102, 241, 0.08);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .notif-message {
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .meta-data {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- STICKY GLASS TOP NAVIGATION -->
+    <nav class="glass-navbar">
+        <a href="events.html" class="brand-logo">
+            <div class="brand-icon">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+            EventTix
+        </a>
+
+        <div class="nav-menu">
+            <a href="events.html" class="nav-link">
+                <i class="fa-solid fa-compass"></i> Browse Events
+            </a>
+            <a href="customer-dashboard.html" class="nav-link">
+                <i class="fa-solid fa-id-card"></i> My Dashboard
+            </a>
+            <a href="notifications.html" class="nav-link active">
+                <i class="fa-regular fa-bell"></i> Notifications
+            </a>
+            <div class="user-pill">
+                <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+                <button onclick="logout()" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.82rem;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN NOTIFICATIONS LAYOUT -->
+    <div class="notifications-container">
+        
+        <div class="glass-panel" style="padding: 28px 32px; margin-bottom: 32px;">
+            <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 12px;">
+                <i class="fa-regular fa-bell" style="color: var(--accent-cyan);"></i> Notification Center
+            </h1>
+            <p style="color: var(--text-secondary); margin: 0;">Stay informed on booking confirmations, seat updates, and parking receipts.</p>
+        </div>
+
+        <div id="notificationsList">
+            <div style="padding: 60px; text-align: center; color: var(--text-secondary);" class="glass-panel">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 14px;"></i>
+                <p>Loading your notification feed...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Core Logic & API Integration -->
+    <script src="js/api.js"></script>
+    <script src="js/auth/notifications.js"></script>
+</body>
+</html>

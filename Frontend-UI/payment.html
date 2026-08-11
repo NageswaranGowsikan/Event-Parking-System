@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Checkout - Event & Parking Reservation</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Master Design System Stylesheet -->
+    <link rel="stylesheet" href="css/design-system.css">
+
+    <style>
+        .payment-wrapper {
+            max-width: 1000px;
+            margin: 40px auto 80px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .timer-box {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .timer-box.timer-expired {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: rgba(244, 63, 94, 0.3);
+            color: #fecdd3;
+        }
+
+        .timer-display {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            font-family: monospace;
+        }
+
+        .credit-card-preview {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            color: white;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .credit-card-preview::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -30%;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        @media (max-width: 850px) {
+            .payment-wrapper { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- STICKY GLASS NAVIGATION -->
+    <nav class="glass-navbar">
+        <a href="events.html" class="brand-logo">
+            <div class="brand-icon">
+                <i class="fa-solid fa-credit-card"></i>
+            </div>
+            EventTix
+        </a>
+
+        <div class="nav-menu">
+            <button onclick="cancelBooking()" class="btn btn-danger">
+                <i class="fa-solid fa-xmark"></i> Cancel Reservation
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN PAYMENT LAYOUT -->
+    <div class="payment-wrapper">
+
+        <!-- PAYMENT METHOD FORM -->
+        <main class="glass-panel payment-container" style="padding: 32px;">
+            
+            <!-- Hold Expiration Timer Box -->
+            <div id="timerBox" class="timer-box">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-regular fa-clock" style="font-size: 1.3rem; color: var(--accent-cyan);"></i>
+                    <span style="font-size: 0.92rem; font-weight: 600;">Hold Timer Active</span>
+                </div>
+                <div id="countdownDisplay" class="timer-display">10:00</div>
+            </div>
+
+            <h1 style="font-size: 1.7rem; font-weight: 800; margin-bottom: 8px;">Payment Details</h1>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 28px;">Encrypted 256-Bit SSL Secured Transaction</p>
+
+            <!-- Interactive Mock Card Preview -->
+            <div class="credit-card-preview">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
+                    <i class="fa-solid fa-sim-card" style="font-size: 2rem; color: #fde047;"></i>
+                    <i class="fa-brands fa-cc-visa" style="font-size: 2.2rem; color: white;"></i>
+                </div>
+                <div style="font-family: monospace; font-size: 1.3rem; letter-spacing: 2px; margin-bottom: 20px;">
+                    •••• •••• •••• 4242
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; text-transform: uppercase;">
+                    <div>
+                        <div style="opacity: 0.7; font-size: 0.7rem;">Card Holder</div>
+                        <div style="font-weight: 700;">VALUED CUSTOMER</div>
+                    </div>
+                    <div>
+                        <div style="opacity: 0.7; font-size: 0.7rem;">Expires</div>
+                        <div style="font-weight: 700;">12/28</div>
+                    </div>
+                </div>
+            </div>
+
+            <form onsubmit="event.preventDefault(); submitPayment();">
+                <div class="form-group">
+                    <label class="form-label">Cardholder Name</label>
+                    <div class="form-input-wrapper">
+                        <input type="text" class="form-input" value="Valued Customer" required>
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Card Number</label>
+                    <div class="form-input-wrapper">
+                        <input type="text" class="form-input" value="4242 •••• •••• 4242" required>
+                        <i class="fa-regular fa-credit-card"></i>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <div class="form-input-wrapper">
+                            <input type="text" class="form-input" value="12/28" required>
+                            <i class="fa-regular fa-calendar"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CVC / CVV</label>
+                        <div class="form-input-wrapper">
+                            <input type="password" class="form-input" value="123" required>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="payBtn" class="btn btn-primary" style="width: 100%; padding: 16px; margin-top: 10px; font-size: 1.05rem;">
+                    <i class="fa-solid fa-lock"></i> Confirm & Complete Order
+                </button>
+            </form>
+
+        </main>
+
+        <!-- STICKY ORDER SUMMARY -->
+        <aside class="glass-panel" style="padding: 28px;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-receipt" style="color: var(--accent-cyan);"></i> Booking Summary
+            </h2>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 0.95rem; color: var(--text-secondary);">
+                <span>Booking Ref #:</span>
+                <strong id="bookingRef" style="color: var(--text-primary); font-family: monospace;">---</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 0.95rem; color: var(--text-secondary);">
+                <span>Status:</span>
+                <span class="badge badge-vip">HOLD PENDING</span>
+            </div>
+
+            <div style="border-top: 1px solid var(--glass-border); padding-top: 16px; margin-top: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700; font-size: 1.05rem;">Total Payment</span>
+                    <span style="font-size: 1.8rem; font-weight: 800; color: var(--accent-emerald);">$ Guaranteed</span>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Core Logic & API Integration -->
+    <script src="js/api.js"></script>
+    <script src="js/payment.js"></script>
+</body>
+</html>
