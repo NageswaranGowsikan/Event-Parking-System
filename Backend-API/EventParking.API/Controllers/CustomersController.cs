@@ -31,25 +31,26 @@ namespace EventParking.API.Controllers
         {
             try { return Ok(await _customerService.GetProfileAsync(id)); }
             catch (Exception ex) { return NotFound(new { Message = ex.Message }); }
-        }
+            }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileDto dto)
-        {
+            {
             try { await _customerService.UpdateProfileAsync(id, dto); return NoContent(); }
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }
 
         [HttpDelete("{id}")]
+        // [Authorize(Roles = "Admin")] // Uncomment when JWT is fully configured
         public async Task<IActionResult> DeactivateCustomer(int id)
         {
             try { await _customerService.DeactivateCustomerAsync(id); return NoContent(); }
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
-        }
+            }
 
         [HttpPost("{id}/reactivate")]
         public async Task<IActionResult> ReactivateCustomer(int id)
-        {
+            {
             try { await _customerService.ReactivateCustomerAsync(id); return NoContent(); }
             catch (Exception ex) { return BadRequest(new { Message = ex.Message }); }
         }

@@ -3,6 +3,7 @@ using EventParking.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static EventParking.API.DTOs.EventDTOs;
 
 namespace EventParking.API.Controllers
 {
@@ -10,37 +11,91 @@ namespace EventParking.API.Controllers
     [ApiController]
     public class EventsController : ControllerBase
     {
-        private readonly EventService _eventService;
+        private readonly EventService _service;
 
-        public EventsController(EventService eventService)
+        public EventsController(EventService service)
         {
-            _eventService = eventService;
+            _service = service;
         }
 
         // GET: api/events (Anyone can view events)
         [HttpGet]
-        public async Task<IActionResult> GetAllEvents()
+        public async Task<IActionResult> GetAll()
         {
-            var events = await _eventService.GetAllEventsAsync();
-            return Ok(events);
+            return Ok(await _service.GetAllAsync());
         }
 
         // GET: api/events/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetEvent(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var ev = await _eventService.GetEventByIdAsync(id);
-            if (ev == null) return NotFound("Event not found");
-            return Ok(ev);
+            try
+            {
+                return Ok(await _service.GetByIdAsync(id));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new
+                {
+                    Message = ex.Message
+                });
+            }
         }
 
         // POST: api/events (Only Admins can create new events)
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateEventDto request)
         {
-            var createdEvent = await _eventService.CreateEventAsync(dto);
-            return CreatedAtAction(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
+            try
+            {
+                var eventItem =
+                    await _service.CreateAsync(
+                        request.Title,
+                        request.Description,
+                        request.VenueId,
+                        request.EventCategoryId,
+                        request.StartDateTime,
+                        request.EndDateTime,
+                        request.Capacity);
+
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = eventItem.Id },
+                    eventItem);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(
+    int id,
+    [FromBody] UpdateEventDto request)
+        {
+            try
+            {
+                return Ok(await _service.UpdateAsync(
+                    id,
+                    request.Title,
+                    request.Description,
+                    request.VenueId,
+                    request.EventCategoryId,
+                    request.StartDateTime,
+                    request.EndDateTime,
+                    request.Capacity,
+                    request.Status));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
     }
 }

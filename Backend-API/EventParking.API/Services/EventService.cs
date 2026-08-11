@@ -53,6 +53,10 @@ namespace EventParking.API.Services
                 Status = e.Status,
                 ImageUrl = e.ImageUrl
             };
+
+            await _eventRepository.AddAsync(eventItem);
+
+            return await GetByIdAsync(eventItem.Id);
         }
 
         public async Task<Event> CreateEventAsync(CreateEventDto dto)

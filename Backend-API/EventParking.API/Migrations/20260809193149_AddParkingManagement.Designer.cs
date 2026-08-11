@@ -4,6 +4,7 @@ using EventParking.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventParking.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809193149_AddParkingManagement")]
+    partial class AddParkingManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,10 +67,6 @@ namespace EventParking.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -88,22 +87,20 @@ namespace EventParking.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
+                    b.Property<int>("Capacity")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("EventDate")
+                    b.Property<DateTime>("EndDateTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EventCategoryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDateTime")
                         .HasColumnType("datetime2");
@@ -124,7 +121,7 @@ namespace EventParking.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("EventCategoryId");
 
                     b.HasIndex("VenueId");
 
@@ -143,7 +140,6 @@ namespace EventParking.API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -161,7 +157,7 @@ namespace EventParking.API.Migrations
                     b.ToTable("EventCategories");
                 });
 
-            modelBuilder.Entity("EventParking.API.Models.Seat", b =>
+            modelBuilder.Entity("EventParking.API.Models.ParkingReservation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -238,7 +234,7 @@ namespace EventParking.API.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Row")
+                    b.Property<string>("SlotNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -249,18 +245,19 @@ namespace EventParking.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SeatNumber")
+                    b.Property<int>("VenueId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("Zone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("VenueId", "SlotNumber")
+                        .IsUnique();
 
-                    b.ToTable("Seats");
+                    b.ToTable("ParkingSlots");
                 });
 
             modelBuilder.Entity("EventParking.API.Models.Venue", b =>
@@ -287,10 +284,6 @@ namespace EventParking.API.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -305,24 +298,24 @@ namespace EventParking.API.Migrations
 
             modelBuilder.Entity("EventParking.API.Models.Event", b =>
                 {
-                    b.HasOne("EventParking.API.Models.EventCategory", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("EventParking.API.Models.EventCategory", "EventCategory")
+                        .WithMany("Events")
+                        .HasForeignKey("EventCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("EventParking.API.Models.Venue", "Venue")
-                        .WithMany()
+                        .WithMany("Events")
                         .HasForeignKey("VenueId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("EventCategory");
 
                     b.Navigation("Venue");
                 });
 
-            modelBuilder.Entity("EventParking.API.Models.Seat", b =>
+            modelBuilder.Entity("EventParking.API.Models.ParkingReservation", b =>
                 {
                     b.HasOne("EventParking.API.Models.Customer", "Customer")
                         .WithMany()
@@ -333,7 +326,13 @@ namespace EventParking.API.Migrations
                     b.HasOne("EventParking.API.Models.Event", "Event")
                         .WithMany()
                         .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("EventParking.API.Models.ParkingSlot", "ParkingSlot")
+                        .WithMany("Reservations")
+                        .HasForeignKey("ParkingSlotId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Customer");

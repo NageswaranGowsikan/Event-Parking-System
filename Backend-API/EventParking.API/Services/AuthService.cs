@@ -24,6 +24,7 @@ namespace EventParking.API.Services
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
+            // Rule: Customer emails must be unique
             if (await _customerRepository.GetByEmailAsync(dto.Email) != null)
                 throw new Exception("Email is already registered.");
 

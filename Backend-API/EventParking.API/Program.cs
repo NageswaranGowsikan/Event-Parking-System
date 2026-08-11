@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using EventParking.API.Data;
 using EventParking.API.Interfaces;
 using EventParking.API.Repositories;
@@ -87,6 +88,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 var app = builder.Build();
 
+// 4. Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
