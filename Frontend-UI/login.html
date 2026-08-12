@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Event & Parking</title>
+    <link rel="stylesheet" href="css/auth.css">
+    
+</head>
+<body>
+    <div class="container">
+        <h2>Login</h2>
+        <div id="msg" class="message"></div>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email Address" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button onclick="login(event)">Login</button>
+        </form>
+        <div class="links">
+            <a href="register.html">Register</a> | 
+            <a href="forgot-password.html">Forgot Password?</a>
+        </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/auth/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Admin Dashboard</title>
+    
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Modern Enterprise Variables */
+        :root {
+            --primary: #000000;
+            --primary-hover: #333333;
+            
+            /* Status Colors */
+            --revenue: #059669;    /* Emerald */
+            --revenue-bg: #d1fae5;
+            --events: #2563eb;     /* Blue */
+            --events-bg: #dbeafe;
+            --bookings: #4f46e5;   /* Indigo */
+            --bookings-bg: #e0e7ff;
+            --seats: #0891b2;      /* Cyan */
+            --seats-bg: #cffafe;
+            --parking: #d97706;    /* Amber */
+            --parking-bg: #fef3c7;
+            --customers: #7c3aed;  /* Violet */
+            --customers-bg: #ede9fe;
+
+            /* Base Colors */
+            --bg-color: #fafafa;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Clean, Bordered Navigation */
+        .navbar {
+            background: var(--card-bg);
+            padding: 16px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .navbar-brand i {
+            color: var(--text-main);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: #f3f4f6;
+            color: var(--text-main);
+        }
+
+        .btn-logout {
+            background: white;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout:hover {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1280px;
+            margin: 48px auto;
+            padding: 0 24px;
+        }
+
+        .dashboard-header {
+            margin-bottom: 40px;
+        }
+
+        .dashboard-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .dashboard-header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        /* Minimalist Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .metric-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border-color: #d1d5db;
+        }
+
+        /* Accent Icon Boxes */
+        .icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-card h3 {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-card p {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        /* Specific Card Colors */
+        .card-revenue .icon-box { background: var(--revenue-bg); color: var(--revenue); }
+        .card-events .icon-box { background: var(--events-bg); color: var(--events); }
+        .card-bookings .icon-box { background: var(--bookings-bg); color: var(--bookings); }
+        .card-seats .icon-box { background: var(--seats-bg); color: var(--seats); }
+        .card-parking .icon-box { background: var(--parking-bg); color: var(--parking); }
+        .card-customers .icon-box { background: var(--customers-bg); color: var(--customers); }
+
+        /* Elegant Loader */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e5e7eb;
+            border-radius: 50%;
+            border-top-color: var(--text-main);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .navbar { flex-direction: column; gap: 20px; padding: 20px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .btn-logout { margin-left: 0; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <h2 class="navbar-brand">
+            <i class="fa-solid fa-cube"></i> EventAdmin
+        </h2>
+        <div class="nav-links">
+    <!-- Add this new Dashboard link right here -->
+    <a href="admin-dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+    
+    <a href="admin-venues.html"><i class="fa-solid fa-map-location-dot"></i> Venues</a>
+    <a href="admin-events.html"><i class="fa-solid fa-ticket"></i> Events</a>
+    <a href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
+    <a href="admin-parking.html"><i class="fa-solid fa-square-parking"></i> Parking</a>
+    <a href="admin-seats.html"><i class="fa-solid fa-chair"></i> Seats</a>
+    <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+   </div>
+    </nav>
+    
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>System Overview</h2>
+            <p>Live metrics across all events and bookings</p>
+        </div>
+        
+        <!-- Upgraded Loading Animation -->
+        <div id="loadingMessage" class="loader-container">
+            <div class="spinner"></div>
+            <h3 style="margin: 0; font-weight: 500; font-size: 1rem;">Loading latest metrics...</h3>
+        </div>
+
+        <!-- Note: Removed style="display: none;" for preview purposes. Add it back when integrating with your JS! -->
+        <div class="metrics-grid" id="metricsGrid">
+            
+            <div class="metric-card card-revenue">
+                <div class="icon-box">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Total Revenue</h3>
+                    <p>$<span id="metricRevenue">12,450.00</span></p>
+                </div>
+            </div>
+            
+            <div class="metric-card card-events">
+                <div class="icon-box">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Total Events</h3>
+                    <p id="metricEvents">24</p>
+                </div>
+            </div>
+            
+            <div class="metric-card card-bookings">
+                <div class="icon-box">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Total Bookings</h3>
+                    <p id="metricBookings">892</p>
+                </div>
+            </div>
+            
+            <div class="metric-card card-seats">
+                <div class="icon-box">
+                    <i class="fa-solid fa-couch"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Available Seats</h3>
+                    <p id="metricSeats">4,105</p>
+                </div>
+            </div>
+            
+            <div class="metric-card card-parking">
+                <div class="icon-box">
+                    <i class="fa-solid fa-car"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Occupied Parking</h3>
+                    <p id="metricParking">156</p>
+                </div>
+            </div>
+            
+            <div class="metric-card card-customers">
+                <div class="icon-box">
+                    <i class="fa-solid fa-user-group"></i>
+                </div>
+                <div class="card-info">
+                    <h3>Total Customers</h3>
+                    <p id="metricCustomers">3,240</p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

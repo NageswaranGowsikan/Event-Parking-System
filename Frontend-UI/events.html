@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Events</title>
+    
+    <!-- Modern Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Your external styles -->
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/events.css">
+    
+    <style>
+        /* Global Styles & Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary: #64748b;
+            --secondary-hover: #475569;
+            --dark: #0f172a;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .navbar h2 i {
+            color: var(--primary);
+        }
+
+        #navLinks {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #navLinks a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #navLinks a:hover {
+            color: white;
+        }
+
+        #navLinks button {
+            background: transparent;
+            color: #cbd5e1;
+            border: 1px solid #cbd5e1;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #navLinks button:hover {
+            background: white;
+            color: var(--dark);
+        }
+
+        /* Hero Section */
+        .events-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+            padding: 60px 20px 80px;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            margin-bottom: -40px; /* Pulls the search bar up over the gradient */
+        }
+
+        .events-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .events-header p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-main);
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            background: #f8fafc;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-search, .btn-clear {
+            padding: 0 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-search {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-search:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-clear {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: var(--secondary-hover);
+        }
+
+        .btn-search:active, .btn-clear:active {
+            transform: scale(0.98);
+        }
+
+        /* Container & Grid layout */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* Fallback events-grid style in case events.css doesn't have a modern grid */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        .loading-state {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .loading-state i {
+            display: block;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                margin: 0 20px 40px;
+            }
+            .btn-search, .btn-clear {
+                padding: 14px;
+                justify-content: center;
+            }
+            .events-header {
+                padding: 40px 20px 60px;
+            }
+            .events-header h1 {
+                font-size: 2.2rem;
+            }
+            .navbar {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <h2><i class="fa-solid fa-ticket"></i> EventTix</h2>
+        <div id="navLinks">
+            <!-- These links will change based on if the user is logged in -->
+            <a href="customer-dashboard.html"><i class="fa-regular fa-id-badge"></i> My Dashboard</a>
+            <a href="notifications.html" class="active"><i class="fa-regular fa-bell"></i> Notifications</a>
+            <button onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+        </div>
+    </nav>
+    
+    <div class="events-header">
+        <h1>Upcoming Events</h1>
+        <p>Discover incredible live experiences and secure your seats today.</p>
+    </div>
+    
+    <!-- FILTER SECTION -->
+    <div class="filter-section">
+        <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Search events by name, artist, or venue...">
+        </div>
+        <button class="btn-search" onclick="applyFilters()">Search</button>
+        <button class="btn-clear" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <div class="container">
+        <!-- The JavaScript will inject the event cards inside this div -->
+        <div id="eventsContainer" class="events-grid">
+            <div class="loading-state">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                Finding the best events for you...
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/events.js"></script>
+</body>
+</html>

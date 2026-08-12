@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile</title>
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <div class="container">
+        <h2>My Profile</h2>
+        <div id="msg" class="message"></div>
+        <form id="profileForm">
+            <label>Name</label>
+            <input type="text" id="name" required>
+            
+            <label>Phone</label>
+            <input type="tel" id="phone" required>
+            
+            <label>Email (Cannot be changed)</label>
+            <input type="email" id="email" disabled>
+            
+            <button type="submit">Update Profile</button>
+        </form>
+        <div class="links">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/auth/profile.js"></script>
+</body>
+</html>
